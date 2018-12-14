@@ -7,11 +7,13 @@ import time
 DISPLAY_FINAL = 0
 DISPLAY_THRESH = 1
 DISPLAY_CROP = 2
+PAUSE_VIDEO = 3
 
 CAPTURE_INPUT = None
 CAPTURE_INPUT_LIVE = 0
 CAPTURE_INPUT_VIDEO = 1
 
+CHANGE_POS_FLAG = False
 def load_capture():
     print("Enter 'live' or name of video in video folder (include extention)")
     usr_input = input()
@@ -22,37 +24,54 @@ def load_capture():
         CAPTURE_INPUT = CAPTURE_INPUT_VIDEO
         return cv2.VideoCapture("./videos/" + usr_input), CAPTURE_INPUT
 
+def change_flag(x):
+    CHANGE_POS_FLAG = True
+
+
+
 if __name__ == '__main__':
+
     #create a generic instance of tractor
     tr = tracktor()
-    #input_vidpath = "./videos/mouse_video.mp4"
+
     ## Start time
     start = time.time()
 
     #loads cap as either live or from video, and returns a variable flag
     cap, CAPTURE_INPUT = load_capture()
 
-    #cap = cv2.VideoCapture(0)
-    #cap = cv2.VideoCapture(input_vidpath)
-    #cap = cv2.imread("./fallot.png",cv2.IMREAD_COLOR)
-
     if cap.isOpened() == False:
         sys.exit('Video file cannot be read! Please check input_vidpath to ensure it is correctly pointing to the video file')
+
 
     #set default display type to final processed frame
     display_type = DISPLAY_FINAL
     #flag used to invert threshold (on/off)
     invert_flag = False
+    #assign a window name for further assignment to it
+    cv2.namedWindow('frame',1)
+    #create trackbar from start to one before last (so that it does't crash)
+    cv2.createTrackbar(trackbarname="frame number",winname="frame",0,int(cap.get(cv2.CAP_PROP_FRAME_COUNT)-1),change_flag)
 
     #Start Running
     while(True):
-        # Capture frame-by-frame
+
+        #set the capture to the frame set by the trackbar
+        cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos(trackbarname="frame number",winname="frame"))
+        #read that frame
         ret, frame = cap.read()
-
         #display frame is a variable to choose between filters to display
-        this = cap.get(1)
-        cv2.namedWindow('frame')
+        if display_type == PAUSE_VIDEO:
+            #keep capturing the same frame
+            this = cv2.getTrackbarPos(trackbarname="frame number",winname="frame")
 
+        else:
+            # Capture frame-by-frame (continue capturing)
+            this = cap.get(1)
+            #set trackbar position to current frame
+            cv2.setTrackbarPos(trackbarname="frame number",winname="frame",pos=int(this))
+
+        #tr.crop(500,500,frame)
         if ret == True:
             #preprocess the frames, adding a threshold, erode and dialing to
             #eliminate small noise
@@ -60,27 +79,25 @@ if __name__ == '__main__':
             thresh = cv2.erode(thresh, tr.kernel, iterations = 1)
             thresh = cv2.dilate(thresh, tr.kernel, iterations = 1)
 
-            #test by inverting the threshold
+            #test inverting the threshold
             if invert_flag:
                 thresh = cv2.bitwise_not(thresh)
 
-
-            final, contours = tr.detect_and_draw_contours(frame, thresh)
-            #try:
             #from our current frame, draw contours and display it on final frame
+            final, contours = tr.detect_and_draw_contours(frame, thresh)
 
-            #calculate cost of previous to current
+            #calculate cost of previous to currentmouse_video
             try:    row_ind, col_ind = tr.hungarian_algorithm()
             except:
+                print("Cannot calculate cost")
                 pass
             #try to re-draw, separate try-except block allows redraw of min_area/max_area
             try:
                 final = tr.reorder_and_draw(final, col_ind, this)
             except:
+                print("Can't draw")
                 pass
-            #except:
-                #individual was lost, prevent crashing with pass
-            #    pass
+
             # Create output dataframe
             #for i in range(n_inds):
             #    df.append([this, meas_now[i][0], meas_now[i][1], s_id[i]])
@@ -98,20 +115,28 @@ if __name__ == '__main__':
 
             #one '1'
             if key == ord('1'):
-                    display_type = DISPLAY_FINAL
-                    print("Final")
-            #two '2'
+                display_type = DISPLAY_FINAL
+                print("Final")
+            #two '2
             elif key == ord('2'):
-                    display_type = DISPLAY_THRESH
-                    print("Thresh")
+                display_type = DISPLAY_THRESH
+                print("Thresh")
+            if key == ord(' '):
+                if display_type is not PAUSE_VIDEO:
+                    display_type = PAUSE_VIDEO
+                    print("PAUSING")
+                else:
+                    display_type = DISPLAY_FINAL
+                    print("UNPAUSING")
 
         #this frame is last frame, stop
-        if tr.last == this and CAPTURE_INPUT == CAPTURE_INPUT_VIDEO:
-            break
+        #if this ==  and CAPTURE_INPUT == CAPTURE_INPUT_VIDEO:
+        #    break
 
 
         #last frame is now this frame
         tr.last = this
+
 
     ## Write positions to file
     #df = pd.DataFrame(np.matrix(df), columns = ['frame','pos_x','pos_y','id'])
