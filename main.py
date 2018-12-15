@@ -51,7 +51,7 @@ if __name__ == '__main__':
     #assign a window name for further assignment to it
     cv2.namedWindow('frame',1)
     #create trackbar from start to one before last (so that it does't crash)
-    cv2.createTrackbar(trackbarname="frame number",winname="frame",0,int(cap.get(cv2.CAP_PROP_FRAME_COUNT)-1),change_flag)
+    cv2.createTrackbar("frame number","frame",0,int(cap.get(cv2.CAP_PROP_FRAME_COUNT)-1),change_flag)
 
     #Start Running
     while(True):
