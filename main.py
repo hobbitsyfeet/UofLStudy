@@ -55,18 +55,36 @@ if __name__ == '__main__':
 
     #Start Running
     while(True):
+        key = cv2.waitKey(1)
 
         #set the capture to the frame set by the trackbar
         cap.set(cv2.CAP_PROP_POS_FRAMES,cv2.getTrackbarPos(trackbarname="frame number",winname="frame"))
-        #read that frame
-        ret, frame = cap.read()
+
         #display frame is a variable to choose between filters to display
         if display_type == PAUSE_VIDEO:
-            #keep capturing the same frame
-            this = cv2.getTrackbarPos(trackbarname="frame number",winname="frame")
+
+            if key ==ord(','):
+                #set the trackbar to the next frame
+                cv2.setTrackbarPos(trackbarname="frame number",winname="frame",pos=int(tr.last-1))
+                this = tr.last - 1
+                print("nudge Left")
+            elif key == ord('.'):
+                #set the Trackbar to previous frame
+                cv2.setTrackbarPos(trackbarname="frame number",winname="frame",pos=int(tr.last+1))
+                this = tr.last + 1
+                print("nudge Right")
+            else:
+                #we do not nudge, but if the Trackbar is moved, we update to that position
+                this = cv2.getTrackbarPos(trackbarname="frame number",winname="frame")
+
+            #set the capture to frame assigned to 'this'
+            cap.set(1,this)
+            #read from frame which capture was set to
+            ret, frame = cap.read()
 
         else:
-            # Capture frame-by-frame (continue capturing)
+            #read the next frame
+            ret, frame = cap.read()
             this = cap.get(1)
             #set trackbar position to current frame
             cv2.setTrackbarPos(trackbarname="frame number",winname="frame",pos=int(this))
@@ -107,11 +125,12 @@ if __name__ == '__main__':
                 display_frame = final
             elif display_type is DISPLAY_THRESH:
                 display_frame = thresh
+            elif display_type is PAUSE_VIDEO:
+                display_frame = final
 
             #out.write(final)
             cv2.imshow('frame', display_frame)
-            key = cv2.waitKey(1)
-            tr.get_input(key)
+
 
             #one '1'
             if key == ord('1'):
@@ -121,6 +140,8 @@ if __name__ == '__main__':
             elif key == ord('2'):
                 display_type = DISPLAY_THRESH
                 print("Thresh")
+
+
             if key == ord(' '):
                 if display_type is not PAUSE_VIDEO:
                     display_type = PAUSE_VIDEO
