@@ -8,20 +8,23 @@ from scipy.spatial.distance import cdist
 
 class tracktor():
     def __init__(self,
-        n_inds = 1,
+        s_id ="NO_ID",
+        colour = (0,0,255),
         block_size = 51, offset = 20,
         min_area = 100, max_area = 1000,
-        scaling = 1.0,
-        mot = True):
+        scaling = 1.0
+        ):
 
         # colours is a vector of BGR values which are used to identify individuals in the video
         # s_id is spider id and is also used for individual identification
         # since we only have two individuals, the program will only use the first two elements from these arrays (s_id and colours)
         # number of elements in colours should be greater than n_inds (THIS IS NECESSARY FOR VISUALISATION ONLY)
         # number of elements in s_id should be greater than n_inds (THIS IS NECESSARY TO GET INDIVIDUAL-SPECIFIC DATA)
-        self.n_inds = n_inds
-        self.s_id = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
-        self.colours = [(0,0,255),(0,255,255),(255,0,255),(0,0,0),(255,255,0),(255,0,0),(0,255,0),(255,255,255)]
+
+        #where each tracktor takes care of one individual, we do not need this.
+        #self.n_inds = n_inds
+        self.s_id = s_id
+        self.colour = colour
 
         # this is the block_size and offset used for adaptive thresholding (block_size should always be odd)
         # these values are critical for tracking performance
@@ -46,13 +49,8 @@ class tracktor():
 
         # mot determines whether the tracker is being used in noisy conditions to track a single object or for multi-object
         # using this will enable k-means clustering to force n_inds number of animals
-        self.mot = mot
+        self.mot = True
 
-        # name of source video and paths
-        self.video = 'test'
-        #self.input_vidpath = '../videos/' + video + '.MP4'
-        #self.output_vidpath = '../tracktor/output/' + video + '.avi'
-        #self.output_filepath = '../tracktor/output/' + video + '.csv'
         codec = 'DIVX' # try other codecs if the default doesn't work ('DIVX', 'avc1', 'XVID') note: this list is non-exhaustive
 
         ## Video writer class to output video with contour and centroid of tracked object(s)
@@ -62,138 +60,11 @@ class tracktor():
         #out = cv2.VideoWriter(filename = output_vidpath, fourcc = fourcc, fps = 60.0, frameSize = output_framesize, isColor = True)
 
         ## Individual location(s) measured in the last and current step
-        self.meas_last = list(np.zeros((self.n_inds,2)))
-        self.meas_now = list(np.zeros((self.n_inds,2)))
+        self.meas_last = list(np.zeros((1,2)))
+        self.meas_now = list(np.zeros((1,2)))
 
-        #the last frame is 0
-        self.last = 0
         #data frame?
         self.df = []
-
-
-
-        #this is to determine if tracktor has been cropped
-        self.cropped = False
-    def get_input(self,key):
-        """
-        This function retreives an input and maps it to a function
-
-        Parameters
-        ----------
-        key: int
-            A key pressed on the keyboard, in our case, a value given by cv2.waitKey(1)
-        """
-        switch = {
-            27: sys.exit,                    #escape 'esc'
-            43: self.increase_offset,        #plus '+'
-            45: self.decrease_offset,        #minus '-'
-            42: self.increase_block_size,    #astrix '*'
-            47: self.decrease_block_size,    #backslash '/'
-            119: self.increase_max_area,     #'w'
-            115: self.decrease_max_area,      #'s'
-            100: self.increase_min_area,      #'a'
-            97: self.decrease_min_area        #'d'
-        }
-        func = switch.get(key)
-        if func is not None:
-            func()
-
-
-    def increase_block_size(self):
-        """
-        This function increases block_size by 2, as it has to be an odd number
-        It displays the value after the change is made.
-        """
-        self.block_size += 2
-        print("block_size: ", end = "")
-        print(self.block_size)
-
-    def decrease_block_size(self):
-        """
-        This function decreases block_size by 2, as it has to be an odd number
-        It displays the value after the change is made.
-        """
-        if self.block_size > 3:
-            self.block_size -= 2
-            print("block_size: ", end = "")
-            print(self.block_size)
-
-    def increase_offset(self):
-        """
-        This function increases offset by 1.
-        It displays the value after the change is made.
-        """
-        self.offset += 1
-        print("offset: ", end = "")
-        print(self.offset)
-
-    def decrease_offset(self):
-        """
-        This function decreases offset by 1, if offset is greater than 1.
-        It displays the value after the change is made.
-        """
-        if self.offset > 1:
-            self.offset -= 1
-            print("offset: ", end = "")
-            print(self.offset)
-
-    def increase_min_area(self):
-        """
-        This function increases min_area by 1.
-        It displays the value after the change is made.
-        """
-        if self.min_area < self.max_area:
-            self.min_area += 5
-            print("min_area: ", end = "")
-            print(self.min_area)
-
-    def decrease_min_area(self):
-        """
-        This function decreases min_area by 1, if min_area is greater than 1.
-        It displays the value after the change is made.
-        """
-        if self.min_area > 5:
-            self.min_area -= 5
-            print("min_area: ", end = "")
-            print(self.min_area)
-
-    def increase_max_area(self):
-        """
-        This function increases max_area by 1.
-        It displays the value after the change is made.
-        """
-        self.max_area += 5
-        print("max_area: ", end = "")
-        print(self.max_area)
-
-    def decrease_max_area(self):
-        """
-        This function decreases max_area by 1, if max_area is greater than min_area.
-        """
-        if self.max_area > self.min_area:
-            self.max_area -= 5
-            print("max_area: ", end = "")
-            print(self.max_area)
-
-    def print_attributes(self):
-            print("Exited with Parameters:")
-            print("block_size: ",end = "")
-            print(self.block_size)
-            print("offset: ",end = "")
-            print(self.offset)
-            print("min_area: ", end = "")
-            print(self.min_area)
-            print("max_area: ",end = "")
-            print(self.max_area)
-
-    def crop(x, y, height, width, frame):
-        #calculate cropped image
-        crop_img = img[y:y+height, x:x+width]
-
-    def center(x, y, height, width, frame):
-        x_center = x + width /2
-        y_center = y + height /2
-        return x_center, y_center
 
 
     def colour_to_thresh(self,frame):
@@ -262,9 +133,9 @@ class tracktor():
 
         i = 0
         self.meas_last = self.meas_now.copy()
-        #del self.meas_now[:]
-        #assigning to empty doesn't crash
         self.meas_now = []
+        #assigning to empty doesn't crash
+        #self.meas_now = []
         while i < len(contours):
             area = cv2.contourArea(contours[i])
             if area < self.min_area or area > self.max_area:
@@ -311,7 +182,7 @@ class tracktor():
         myarray = np.vstack(contours)
         myarray = myarray.reshape(myarray.shape[0], myarray.shape[2])
 
-        kmeans = KMeans(n_clusters=self.n_inds, random_state=0, n_init = 50).fit(myarray)
+        kmeans = KMeans(n_clusters=1, random_state=0, n_init = 50).fit(myarray)
         l = len(kmeans.cluster_centers_)
 
         for i in range(l):
@@ -405,29 +276,16 @@ class tracktor():
             reordered = [i[0] for i in sorted(enumerate(current_ids), key=lambda x:x[1])]
             self.meas_now = [x for (y,x) in sorted(zip(reordered,self.meas_now))]
 
-        # Draw centroids
-        if self.mot == False:
-            for i in range(len(self.meas_now)):
-                if self.colours[i%4] == (0,0,255):
-                    cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 5, self.colours[i%4], -1, cv2.LINE_AA)
-
-                    #circle for min_area (A = pi*r^2) => r = sqrt(A/pi)
-                    min_radius = int(np.sqrt(self.min_area/np.pi))
-                    cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255,255,255), 1, cv2.LINE_AA)
-
-                    max_radius = int(np.sqrt(self.max_area/np.pi))
-                    cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, (0,0,255), 1, cv2.LINE_AA)
-        else:
-            for i in range(self.n_inds):
-                cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 5, self.colours[i%self.n_inds], -1, cv2.LINE_AA)
+        for i in range(1):
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 5, self.colour, -1, cv2.LINE_AA)
 
 
-                #circle for min_area (A = pi*r^2) => r = sqrt(A/pi)
-                min_radius = int(np.sqrt(self.min_area/np.pi))
-                cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255,255,255), 1, cv2.LINE_AA)
+            #circle for min_area (A = pi*r^2) => r = sqrt(A/pi)
+            min_radius = int(np.sqrt(self.min_area/np.pi))
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255,255,255), 1, cv2.LINE_AA)
 
-                max_radius = int(np.sqrt(self.max_area/np.pi))
-                cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, (0,0,255), 1, cv2.LINE_AA)
+            max_radius = int(np.sqrt(self.max_area/np.pi))
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, (0,0,255), 1, cv2.LINE_AA)
 
         # add frame number
         font = cv2.FONT_HERSHEY_SCRIPT_SIMPLEX
