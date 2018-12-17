@@ -1,7 +1,7 @@
 # UofLStudy
 This is the github repository for Justin Petluk's Independent study at University of Lethbridge. (2018)
 
-DESCRIPTION IS TO COME...
+This will become a tool in which to use Tracktor to export data in a more intuitive way.
 
 _________________________________________________
 Tracktor's information
