@@ -1,3 +1,90 @@
+from tracktor import tracktor
+import cv2
+class VideoCapture:
+    def __init__(self, video_source=0):
+        # Open the video source
+        self.vid = cv2.VideoCapture(video_source)
+        if not self.vid.isOpened():
+            raise ValueError("Unable to open video source", video_source)
+
+        # Get video source width, height and length in frames
+        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.current_frame = 0
+        self.last_frame = self.current_frame
+
+        self.trackers = [tracktor()]*1
+
+        #constants for interaction
+        self.DISPLAY_FINAL = 0
+        self.DISPLAY_THRESH = 1
+        self.PAUSE_VIDEO = 3
+
+        #assignment we use to choose different processes
+        self.display_type = self.DISPLAY_FINAL
+
+    def set_frame(self, value):
+        self.vid.set(cv2.CAP_PROP_POS_FRAMES,value)
+
+    def get_frame(self):
+        if self.vid.isOpened():
+            ret, frame = self.vid.read()
+
+            self.current_frame = self.vid.get(cv2.CAP_PROP_POS_FRAMES)
+
+            if ret:
+
+                # Return a boolean success flag and the current frame converted to BGR
+                #return (ret, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                return (ret, self.process(self.trackers[0],frame,self.current_frame))
+            else:
+                return (ret, None)
+        else:
+            return (ret, None)
+
+    def pause_frame(self):
+        pass
+    def resume_frames(self):
+        pass
+    def process(self,tracktor,frame,this):
+        #preprocess the frames, adding a threshold, erode and dialing to
+        #eliminate small noise
+        thresh = tracktor.colour_to_thresh(frame)
+        thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
+        thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
+
+        #from our current frame, draw contours and display it on final frame
+        final, contours = tracktor.detect_and_draw_contours(frame, thresh)
+
+        #calculate cost of previous to currentmouse_video
+        try:    row_ind, col_ind = tracktor.hungarian_algorithm()
+        except:
+            print("Cannot calculate cost")
+            pass
+        #try to re-draw, separate try-except block allows redraw of min_area/max_area
+        try:
+            final = tracktor.reorder_and_draw(final, col_ind, this)
+        except:
+            print("Can't draw")
+            pass
+
+        # Display the resulting frame
+        if self.display_type is self.DISPLAY_FINAL:
+            self.display_frame = final
+        elif self.display_type is self.DISPLAY_THRESH:
+            self.display_frame = thresh
+        elif self.display_type is self.PAUSE_VIDEO:
+            self.display_frame = final
+        return self.display_frame
+
+    # Release the video source when the object is destroyed
+    def __del__(self):
+        if self.vid.isOpened():
+            self.vid.release()
+
+
+'''
 import numpy as np
 from tracktor import tracktor
 import cv2
@@ -211,3 +298,4 @@ class video():
 
     def export(self):
         pass
+'''
