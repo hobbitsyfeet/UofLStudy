@@ -26,6 +26,12 @@ class video():
         #assignment we use to choose different processes
         self.display_type = self.DISPLAY_FINAL
 
+        self.current_frame = None
+
+    def get_previous_frame(self):
+        pass
+    def get_next_frame(self):
+        pass
 
     def load(self,path = ""):
         """

@@ -133,9 +133,9 @@ class tracktor():
 
         i = 0
         self.meas_last = self.meas_now.copy()
-        self.meas_now = []
+        #del self.meas_now[:]
         #assigning to empty doesn't crash
-        #self.meas_now = []
+        self.meas_now = []
         while i < len(contours):
             area = cv2.contourArea(contours[i])
             if area < self.min_area or area > self.max_area:
@@ -176,8 +176,8 @@ class tracktor():
             individual's location on current frame
         """
 
-        del self.meas_now[:]
-        #  self.meas_now = []
+        #del self.meas_now[:]
+        self.meas_now = []
         # Clustering contours to separate individuals
         myarray = np.vstack(contours)
         myarray = myarray.reshape(myarray.shape[0], myarray.shape[2])
