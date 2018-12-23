@@ -19,6 +19,7 @@ class App:
 
         self.play_state = False
 
+
         # open video source (by default this will try to open the computer webcam)
         self.vid = VideoCapture(self.video_source)
 
@@ -54,21 +55,20 @@ class App:
 
 
         self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_bar_label.grid(column = 3,columnspan=47,row=4)
+        self.frame_bar_label.grid(column = 0,columnspan=45,row=3, sticky = "N")
         #self.frame_bar_label.pack()
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
-        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length,command = self.set_frame_pos)
+        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
         self.frame_bar.config(length = self.vid.width)
-        self.frame_bar.grid(column = 3,columnspan=47,row=3)
-        #self.frame_bar.pack(side = tkinter.LEFT)
+        self.frame_bar.grid(column = 2,columnspan=45,row=2, sticky = "SW")
 
         #buttons for videos
         self.play = ttk.Button(window,text = "Play", command = self.play)
-        self.play.grid(row = 3,column = 0)
+        self.play.grid(row = 2,column = 0,sticky = "E")
 
         self.pause = ttk.Button(window,text = "Pause", command = self.pause)
-        self.pause.grid(row = 3,column = 1)
+        self.pause.grid(row = 2,column = 1,sticky = "W")
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -98,7 +98,8 @@ class App:
             #typically at the end of the video it cannot process, restart video
             self.set_frame_pos(1)
             self.set_frame_bar()
-            self.window.after(self.delay, self.update)
+            self.pause()
+            #self.window.after(self.delay, self.update)
             #self.window.after(self.delay*10, )
 
 
