@@ -39,13 +39,13 @@ class App:
 
 
         self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_bar_label.grid(column = 3,columnspan=7,row=3)
+        self.frame_bar_label.grid(column = 3,columnspan=47,row=3)
         #self.frame_bar_label.pack()
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length,command = self.set_frame_pos)
         self.frame_bar.config(length = self.vid.width)
-        self.frame_bar.grid(column = 3,columnspan=7,row=2)
+        self.frame_bar.grid(column = 3,columnspan=47,row=2)
         #self.frame_bar.pack(side = tkinter.LEFT)
 
         #buttons for videos
@@ -55,8 +55,11 @@ class App:
         self.pause = ttk.Button(window,text = "Pause", command = self.pause)
         self.pause.grid(row = 2,column = 1)
 
+        #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
+
+
         # After it is called once, the update method will be automatically called every delay milliseconds
-        self.delay = 15
+        self.delay = 10
         self.update()
 
         self.window.mainloop()
@@ -64,12 +67,15 @@ class App:
     def update(self):
 
         # Get a frame from the video source
-        self.set_frame_bar()
+        self.frame_bar_label.config(text = int(self.vid.current_frame))
         try:
-
+            #ret, whole_frame = self.vid.get_frame(self.vid.NO_TRACKING)
+            #track individual
             ret, frame = self.vid.get_frame(1)
-            ret, whole_frame = self.vid.get_frame(self.vid.NO_TRACKING)
+
+            #track all
             ret, track_all_frame = self.vid.get_frame(self.vid.TRACK_ALL)
+            #update framenumber
             self.frame_bar_label.config(text = int(self.vid.current_frame))
 
         except:
@@ -90,10 +96,10 @@ class App:
             self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
 
 
-        #after a certain time, update to the next frame if play is true
+            #after a certain time, update to the next frame if play is true
         if self.play_state is True:
             self.window.after(self.delay, self.update)
-
+            self.set_frame_bar()
 
     def play(self):
         if self.play_state is not True:
@@ -104,6 +110,13 @@ class App:
         print("Pausing")
         self.play_state = False
 
+    def previous_frame():
+        self.set_frame_pos(1)
+        self.set_frame_bar()
+
+    def next_frame():
+        pass
+
 
     def callback1(self,event):
         print ("one clicked at", event.x, event.y)
@@ -112,6 +125,11 @@ class App:
     def set_frame_bar(self):
         self.frame_bar.config(value = self.vid.current_frame)
 
+
+
     def set_frame_pos(self,value):
         self.vid.current_frame = math.floor(float(value))
         self.vid.set_frame(self.vid.current_frame)
+        if self.play_state is False:
+            self.update()
+            #self.window.after(self.delay, )

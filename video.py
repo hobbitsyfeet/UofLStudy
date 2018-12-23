@@ -37,6 +37,9 @@ class VideoCapture:
 
         #zoom variable for setting focused frame
         self.zoom = 4
+    def run(self):
+        while(true):
+            update()
 
     def set_frame(self, value):
         self.vid.set(cv2.CAP_PROP_POS_FRAMES,value)
