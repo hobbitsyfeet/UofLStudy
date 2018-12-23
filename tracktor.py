@@ -289,7 +289,7 @@ class tracktor():
 
         # add frame number
         font = cv2.FONT_HERSHEY_SCRIPT_SIMPLEX
-        cv2.putText(final, str(int(fr_no)), (5,30), font, 1, (255,255,255), 2)
+        #cv2.putText(final, str(int(fr_no)), (5,30), font, 1, (255,255,255), 2)
 
         return final
 
