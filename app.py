@@ -24,36 +24,51 @@ class App:
 
         #set min window size to the videocapture size
         #window.minsize(int(self.vid.width),int(self.vid.height))
+        self.menu = tkinter.Menu(window)
+        window.config(menu= self.menu)
 
+        self.file_menu = tkinter.Menu(self.menu, tearoff = 0)
+        self.menu.add_cascade(label = "File", menu = self.file_menu)
+
+        self.file_menu.add_command(label="New", command=self.donothing)
+        self.file_menu.add_command(label="Open", command=self.donothing)
+        self.file_menu.add_command(label="Save", command=self.donothing)
+        self.file_menu.add_command(label="Save as...", command=self.donothing)
+        self.file_menu.add_command(label="Close", command=self.donothing)
+
+        self.edit_menu = tkinter.Menu(self.menu, tearoff = 0)
+        self.menu.add_cascade(label = "Edit", menu = self.edit_menu)
+
+        #self.file_menu.grid(row=0, column = 0)
         # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
 
         self.canvas = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height, cursor = "crosshair")
         self.canvas.bind("<Button-1>", self.callback1)
-        self.canvas.grid(column = 0, columnspan = 5,row=0)
+        self.canvas.grid(column = 0, columnspan = 5,row=1)
         #self.canvas.pack(side=tkinter.TOP)
 
         self.canvas_focused = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height, cursor = "crosshair")
         self.canvas_focused.bind("<Button-1>", self.callback1)
-        self.canvas_focused.grid(column = 6,columnspan = 5,row=0)
+        self.canvas_focused.grid(column = 6,columnspan = 5,row=1)
         #self.canvas_focused.pack(side=tkinter.LEFT)
 
 
         self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_bar_label.grid(column = 3,columnspan=47,row=3)
+        self.frame_bar_label.grid(column = 3,columnspan=47,row=4)
         #self.frame_bar_label.pack()
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length,command = self.set_frame_pos)
         self.frame_bar.config(length = self.vid.width)
-        self.frame_bar.grid(column = 3,columnspan=47,row=2)
+        self.frame_bar.grid(column = 3,columnspan=47,row=3)
         #self.frame_bar.pack(side = tkinter.LEFT)
 
         #buttons for videos
         self.play = ttk.Button(window,text = "Play", command = self.play)
-        self.play.grid(row = 2,column = 0)
+        self.play.grid(row = 3,column = 0)
 
         self.pause = ttk.Button(window,text = "Pause", command = self.pause)
-        self.pause.grid(row = 2,column = 1)
+        self.pause.grid(row = 3,column = 1)
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -63,6 +78,7 @@ class App:
         self.update()
 
         self.window.mainloop()
+
 
     def update(self):
 
@@ -89,11 +105,12 @@ class App:
             #if the return for a frame is true
         if ret:
             #set the canvas to the frame image
-            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
-            self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
+            #self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
+            #self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
-            self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-            self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
+            #self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+            #self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
+            pass
 
 
             #after a certain time, update to the next frame if play is true
@@ -133,3 +150,10 @@ class App:
         if self.play_state is False:
             self.update()
             #self.window.after(self.delay, )
+    def save_profile():
+        pass
+    def load_file():
+        pass
+
+    def donothing():
+        pass
