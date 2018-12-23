@@ -13,7 +13,7 @@ class VideoCapture:
         # Get video source width, height and length in frames
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)-4
         self.current_frame = 0
         self.last_frame = self.current_frame
 

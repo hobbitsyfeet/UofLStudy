@@ -45,23 +45,30 @@ class App:
 
         self.canvas = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height, cursor = "crosshair")
         self.canvas.bind("<Button-1>", self.callback1)
-        self.canvas.grid(column = 0, columnspan = 5,row=1)
+        self.canvas.grid(column = 0, columnspan = 6,row=1)
         #self.canvas.pack(side=tkinter.TOP)
 
         self.canvas_focused = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height, cursor = "crosshair")
         self.canvas_focused.bind("<Button-1>", self.callback1)
-        self.canvas_focused.grid(column = 6,columnspan = 5,row=1)
+        self.canvas_focused.grid(column = 7,columnspan = 6,row=1)
         #self.canvas_focused.pack(side=tkinter.LEFT)
 
 
         self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_bar_label.grid(column = 0,columnspan=45,row=3, sticky = "N")
+        self.frame_bar_label.grid(column = 6,row=3,columnspan = 2, sticky = "NW")
         #self.frame_bar_label.pack()
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
         self.frame_bar.config(length = self.vid.width)
-        self.frame_bar.grid(column = 2,columnspan=45,row=2, sticky = "SW")
+        self.frame_bar.grid(column = 2,row=2,columnspan = 9, sticky = "SW")
+
+        self.nudge_left = ttk.Button(window,text = "<", command = self.previous_frame,width = 2)
+        self.nudge_left.grid(row = 2,column = 1,sticky = "E")
+
+        self.nudge_left = ttk.Button(window,text = ">", command = self.next_frame,width = 2)
+        self.nudge_left.grid(row = 2,column = 10,sticky = "W")
+
 
         #buttons for videos
         self.play = ttk.Button(window,text = "Play", command = self.play)
@@ -69,6 +76,9 @@ class App:
 
         self.pause = ttk.Button(window,text = "Pause", command = self.pause)
         self.pause.grid(row = 2,column = 1,sticky = "W")
+
+
+
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -81,7 +91,6 @@ class App:
 
 
     def update(self):
-
         # Get a frame from the video source
         self.frame_bar_label.config(text = int(self.vid.current_frame))
         try:
@@ -96,11 +105,10 @@ class App:
 
         except:
             #typically at the end of the video it cannot process, restart video
-            self.set_frame_pos(1)
-            self.set_frame_bar()
-            self.pause()
-            #self.window.after(self.delay, self.update)
-            #self.window.after(self.delay*10, )
+            #self.set_frame_pos(1)
+            #self.set_frame_bar()
+            self.play_state = False
+
 
 
             #if the return for a frame is true
@@ -126,13 +134,19 @@ class App:
     def pause(self):
         print("Pausing")
         self.play_state = False
+        self.update()
 
-    def previous_frame():
-        self.set_frame_pos(1)
+    #NOTE current_frame - 7 just works idk why....
+    def previous_frame(self):
+        self.set_frame_pos(self.vid.current_frame-7)
         self.set_frame_bar()
+        self.update()
 
-    def next_frame():
-        pass
+    #NOTE current_frame - 5 just works idk why....
+    def next_frame(self):
+        self.set_frame_pos(self.vid.current_frame-5)
+        self.set_frame_bar()
+        self.update()
 
 
     def callback1(self,event):
