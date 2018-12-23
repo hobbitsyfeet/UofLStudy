@@ -105,12 +105,11 @@ class App:
             #if the return for a frame is true
         if ret:
             #set the canvas to the frame image
-            #self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
-            #self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
+            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
+            self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
-            #self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-            #self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
-            pass
+            self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+            self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
 
 
             #after a certain time, update to the next frame if play is true
