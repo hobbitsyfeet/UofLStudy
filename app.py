@@ -16,15 +16,15 @@ class App:
 
 
         self.border = 10
-        self.number_of_trackers = 1
+        self.number_of_trackers = 5
+
 
         self.working_number = 1
 
         self.play_state = False
 
-        #set min window size to the videocapture size
-        self.load_file()
-        
+
+
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
 
@@ -42,15 +42,12 @@ class App:
 
 
 
+        #set min window size to the videocapture size
+        self.load_file()
+        self.vid.TRACK_ALL = self.number_of_trackers+1
         #window.minsize(int(self.vid.width* 2),int(self.vid.height))
 
-
-
-
-
-
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
-
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 20
@@ -96,8 +93,56 @@ class App:
         self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
         self.pause.grid(row = 2,column = 1,sticky = "W")
 
+        # Add a grid
+        mainframe = tkinter.Frame(self.window)
+        mainframe.grid(column=0,row=0, sticky="NW" )
+        mainframe.columnconfigure(5, weight = 1)
+        mainframe.rowconfigure(5, weight = 1)
+
+
+        for i in range(self.number_of_trackers):
+            self.vid.add_tracker()
+
+        # Create a Tkinter variable
+        self.tkvar = tkinter.StringVar(self.window)
+
+        # Dictionary with options
+        choices = []
+        for i in range(len(self.vid.trackers)):
+            #add value to NO_ID
+            self.vid.trackers[i].s_id += str(i)
+            choices.append(self.vid.trackers[i].s_id)
+        choices.append("All")
+
+
+        self.tkvar.set(self.vid.trackers[1].s_id) # set the default option
+
+        popupMenu = ttk.OptionMenu(mainframe, self.tkvar, *choices)
+        tkinter.Label(mainframe, text="Tracked Individual").grid(row = 1, column = 1)
+        popupMenu.grid(row = 2, column =1)
+
+
+        # on change dropdown value
+    def change_dropdown(*args):
+        print( self.tkvar.get() )
+        # link function to change dropdown
+        #self.tkvar.trace(find_tracker_index_by_id,change_dropdown)
+
+    def find_tracker_index_by_id(self,name):
+        if name == "All":
+            self.working_number = self.number_of_trackers + 1
+        for i in range(len(self.vid.trackers)):
+            if name == self.vid.trackers[i].s_id:
+                self.working_number = i
+                print(self.working_number)
+                return i
+
+
+
 
     def update(self):
+        self.find_tracker_index_by_id(self.tkvar.get())
+        print(self.working_number)
         # Get a frame from the video source
         self.frame_bar_label.config(text = int(self.vid.current_frame))
         #ret, whole_frame = self.vid.get_frame(self.vid.NO_TRACKING)
@@ -105,10 +150,10 @@ class App:
         #check if we are not the last frame, if we are, stop
         if self.vid.current_frame < self.vid.length:
             #track individual
-            ret, frame = self.vid.get_frame(1)
+            ret, frame = self.vid.get_frame(self.working_number)
 
             #track all
-            ret, track_all_frame = self.vid.get_frame(self.vid.TRACK_ALL)
+            #ret, track_all_frame = self.vid.get_frame(self.vid.TRACK_ALL)
             #update framenumber
             self.frame_bar_label.config(text = int(self.vid.current_frame))
 
@@ -121,11 +166,12 @@ class App:
                 #if the return for a frame is true
             if ret:
                 #set the canvas to the frame image
-                self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
+
+                self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
-                self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-                self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
+                #self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+                #self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
 
 
                 #after a certain time, update to the next frame if play is true
@@ -192,13 +238,11 @@ class App:
             self.window_width = self.vid.width
             self.window_height = self.vid.height
             self.canvas = self.setup_canvas()
-            self.canvas_focused = self.setup_canvas_focused()
+            #self.canvas_focused = self.setup_canvas_focused()
 
             self.setup_video_functions()
 
             self.update()
-
-
 
     def donothing(self):
         pass

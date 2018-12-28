@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from math import floor
 from random import randrange
+
 class VideoCapture:
     def __init__(self, video_source=""):
         # Open the video source
@@ -18,7 +19,7 @@ class VideoCapture:
         self.current_frame = 0
         self.last_frame = self.current_frame
 
-        self.trackers = [tracktor()]*1
+        self.trackers = [tracktor()]
 
         #randomize colour
         for i in range(len(self.trackers)):
@@ -68,26 +69,29 @@ class VideoCapture:
         else:
             return (None)
 
-    def resize_video(self,width,height):
-        self.width = width
-        self.height = height
-
     def show_all(self,frame):
-        for i in range(len(self.trackers)):
+
+        for i in range(len(self.trackers)-1):
+            ret,frame = self.process(self.trackers[i],frame,self.current_frame)
             cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
-            return frame
+        return frame
             #frame = self.process(self.trackers[i],frame,self.current_frame)
 
     def get_frame(self,tracking = 0):
         if self.vid.isOpened():
             ret, frame = self.vid.read()
+
+
             self.current_frame = self.vid.get(cv2.CAP_PROP_POS_FRAMES)
 
-            if tracking == len(self.trackers)+1:
+            if tracking == len(self.trackers):
+
+                #for i in range(len(self.trackers)):
+                #    self.process(frame,self.trackers[i],self.current_frame)
                 frame = self.show_all(frame)
 
             if tracking > 0 and tracking != self.TRACK_ALL:
-                frame = self.get_focused_frame(frame,tracking-1)
+                frame = self.get_focused_frame(frame,tracking)
 
             if ret:
                 return (ret,frame)
@@ -99,18 +103,15 @@ class VideoCapture:
     def initVideo(self):
         return ret,frame
 
-
-    def pause_frame(self):
-        pass
-    def resume_frames(self):
-        pass
     def process(self,tracktor,frame,this):
         #preprocess the frames, adding a threshold, erode and dialing to
 
         #eliminate small noise
+
         thresh = tracktor.colour_to_thresh(frame)
         thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
         thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
+
 
         #from our current frame, draw contours and display it on final frame
         final, contours = tracktor.detect_and_draw_contours(frame, thresh)
@@ -121,13 +122,15 @@ class VideoCapture:
         final = tracktor.reorder_and_draw(final, col_ind, this)
 
         # Display the resulting frame
-        if self.display_type is self.DISPLAY_FINAL:
-            self.display_frame = final
-        elif self.display_type is self.DISPLAY_THRESH:
-            self.display_frame = thresh
-        elif self.display_type is self.PAUSE_VIDEO:
-            self.display_frame = final
-        return (True,self.display_frame)
+
+        return (True,final)
+
+    def add_tracker(self):
+        self.trackers.append(tracktor())
+        self.trackers[-1].colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1))
+
+    def delete_tracker(self,index):
+        del trackers[index]
 
     # Release the video source when the object is destroyed
     def __del__(self):
