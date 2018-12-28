@@ -4,6 +4,8 @@ import time
 import cv2
 import tkinter
 from tkinter import ttk
+import tkinter.filedialog as fileDialog
+#from tkinter import ttk.Label, ttk.Button
 import PIL.Image, PIL.ImageTk
 import math
 
@@ -11,6 +13,7 @@ class App:
     def __init__(self, window, window_title, video_source=0):
         self.window = window
         self.window.title(window_title)
+
         self.border = 10
         self.video_source = video_source
         self.number_of_trackers = 1
@@ -22,6 +25,8 @@ class App:
 
         # open video source (by default this will try to open the computer webcam)
         self.vid = VideoCapture(self.video_source)
+        self.window_width = self.vid.width
+        self.window_height = self.vid.height
 
         #set min window size to the videocapture size
         #window.minsize(int(self.vid.width),int(self.vid.height))
@@ -32,7 +37,7 @@ class App:
         self.menu.add_cascade(label = "File", menu = self.file_menu)
 
         self.file_menu.add_command(label="New", command=self.donothing)
-        self.file_menu.add_command(label="Open", command=self.donothing)
+        self.file_menu.add_command(label="Open", command=self.load_file)
         self.file_menu.add_command(label="Save", command=self.donothing)
         self.file_menu.add_command(label="Save as...", command=self.donothing)
         self.file_menu.add_command(label="Close", command=self.donothing)
@@ -41,17 +46,8 @@ class App:
         self.menu.add_cascade(label = "Edit", menu = self.edit_menu)
 
         #self.file_menu.grid(row=0, column = 0)
-        # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
-
-        self.canvas = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height, cursor = "crosshair")
-        self.canvas.bind("<Button-1>", self.callback1)
-        self.canvas.grid(column = 0, columnspan = 6,row=1)
-        #self.canvas.pack(side=tkinter.TOP)
-
-        self.canvas_focused = tkinter.Canvas(window, width = self.vid.width, height = self.vid.height, cursor = "crosshair")
-        self.canvas_focused.bind("<Button-1>", self.callback1)
-        self.canvas_focused.grid(column = 7,columnspan = 6,row=1)
-        #self.canvas_focused.pack(side=tkinter.LEFT)
+        self.canvas = self.setup_canvas()
+        self.canvas_focused = self.setup_canvas_focused()
 
 
         self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
@@ -84,17 +80,34 @@ class App:
 
 
         # After it is called once, the update method will be automatically called every delay milliseconds
-        self.delay = 10
+        self.delay = 20
         self.update()
 
         self.window.mainloop()
+
+    def setup_canvas(self):
+        # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
+        canvas = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height , cursor = "crosshair")
+        canvas.bind("<Button-1>", self.callback1)
+        canvas.grid(column = 0, columnspan = 6,row=1,ipady = 1)
+        #self.vid.resize_video(self.window_width/2,self.window_height)
+        return canvas
+
+    def setup_canvas_focused(self):
+        canvas_focused = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height, cursor = "crosshair")
+        canvas_focused.bind("<Button-1>", self.callback1)
+        canvas_focused.grid(column = 7,columnspan = 6,row=1)
+        #self.vid.resize_video(self.window_width,self.window_height)
+        return canvas_focused
 
 
     def update(self):
         # Get a frame from the video source
         self.frame_bar_label.config(text = int(self.vid.current_frame))
-        try:
-            #ret, whole_frame = self.vid.get_frame(self.vid.NO_TRACKING)
+        #ret, whole_frame = self.vid.get_frame(self.vid.NO_TRACKING)
+
+        #check if we are not the last frame, if we are, stop
+        if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(1)
 
@@ -103,28 +116,26 @@ class App:
             #update framenumber
             self.frame_bar_label.config(text = int(self.vid.current_frame))
 
-        except:
             #typically at the end of the video it cannot process, restart video
             #self.set_frame_pos(1)
             #self.set_frame_bar()
-            self.play_state = False
+            #self.play_state = False
+            #print("ERROR")
+
+                #if the return for a frame is true
+            if ret:
+                #set the canvas to the frame image
+                self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
+                self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
+
+                self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+                self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
 
 
-
-            #if the return for a frame is true
-        if ret:
-            #set the canvas to the frame image
-            self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(track_all_frame))
-            self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
-
-            self.photo_focused = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-            self.canvas_focused.create_image(0, 0, image = self.photo_focused, anchor = tkinter.NW)
-
-
-            #after a certain time, update to the next frame if play is true
-        if self.play_state is True:
-            self.window.after(self.delay, self.update)
-            self.set_frame_bar()
+                #after a certain time, update to the next frame if play is true
+            if self.play_state is True:
+                self.window.after(self.delay, self.update)
+                self.set_frame_bar()
 
     def play(self):
         if self.play_state is not True:
@@ -132,9 +143,11 @@ class App:
             self.update()
 
     def pause(self):
-        print("Pausing")
-        self.play_state = False
-        self.update()
+        #pause only if play is set
+        if self.play_state is True:
+            print("Pausing")
+            self.play_state = False
+            self.update()
 
     #NOTE current_frame - 7 just works idk why....
     def previous_frame(self):
@@ -164,10 +177,25 @@ class App:
         if self.play_state is False:
             self.update()
             #self.window.after(self.delay, )
-    def save_profile():
-        pass
-    def load_file():
+    def save_profile(self):
         pass
 
-    def donothing():
+        #loadfile finds a file from dialog
+    def load_file(self):
+        print("loading file")
+        file_types = [('Video files', '*.mp4'), ('All files', '*')]
+        dlg = fileDialog.Open()
+        file = dlg.show()
+
+        print(file)
+        if file != '':
+            del self.vid
+            self.vid = VideoCapture(file)
+            self.window_width = self.vid.width
+            self.window_height = self.vid.height
+            self.canvas = self.setup_canvas()
+            self.canvas_focused = self.setup_canvas_focused()
+
+            self.update()
+    def donothing(self):
         pass

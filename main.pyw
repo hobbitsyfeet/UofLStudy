@@ -3,7 +3,7 @@ import tkinter
 
 if __name__ == "__main__":
  # Create a window and pass it to the Application object
-    App(tkinter.Tk(), "Tkinter and OpenCV", "./videos/mouse_video.mp4")
+    App(tkinter.Tk(), "Tkinter and OpenCV")
     ## Start time
     #start = time.time()
 

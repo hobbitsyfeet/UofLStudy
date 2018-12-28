@@ -2,15 +2,16 @@ from tracktor import tracktor
 import cv2
 import numpy as np
 from math import floor
-import random
+from random import randrange
 class VideoCapture:
-    def __init__(self, video_source=0):
+    def __init__(self, video_source=""):
         # Open the video source
         self.vid = cv2.VideoCapture(video_source)
         if not self.vid.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
         # Get video source width, height and length in frames
+
         self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
         self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)-4
@@ -21,7 +22,7 @@ class VideoCapture:
 
         #randomize colour
         for i in range(len(self.trackers)):
-            self.trackers[i].colour = (random.randrange(0,255,1),random.randrange(0,255,1),random.randrange(0,255,1))
+            self.trackers[i].colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1))
 
         #constants for interaction
         self.DISPLAY_FINAL = 0
@@ -67,6 +68,10 @@ class VideoCapture:
         else:
             return (None)
 
+    def resize_video(self,width,height):
+        self.width = width
+        self.height = height
+
     def show_all(self,frame):
         for i in range(len(self.trackers)):
             cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
@@ -92,7 +97,6 @@ class VideoCapture:
             return (ret, None)
 
     def initVideo(self):
-
         return ret,frame
 
 
@@ -102,32 +106,19 @@ class VideoCapture:
         pass
     def process(self,tracktor,frame,this):
         #preprocess the frames, adding a threshold, erode and dialing to
-        try:
-            #eliminate small noise
-            thresh = tracktor.colour_to_thresh(frame)
-            thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
-            thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
-        except:
-            print("Cannot create threshold")
-            pass
+
+        #eliminate small noise
+        thresh = tracktor.colour_to_thresh(frame)
+        thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
+        thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
 
         #from our current frame, draw contours and display it on final frame
-        try:
-            final, contours = tracktor.detect_and_draw_contours(frame, thresh)
-        except:
-            print("Cannot detect and draw contours (Nothing to draw?)")
-            pass
+        final, contours = tracktor.detect_and_draw_contours(frame, thresh)
         #calculate cost of previous to currentmouse_video
-        try:    row_ind, col_ind = tracktor.hungarian_algorithm()
-        except:
-            print("Cannot calculate cost")
-            pass
+        row_ind, col_ind = tracktor.hungarian_algorithm()
+
         #try to re-draw, separate try-except block allows redraw of min_area/max_area
-        try:
-            final = tracktor.reorder_and_draw(final, col_ind, this)
-        except:
-            print("Can't draw")
-            pass
+        final = tracktor.reorder_and_draw(final, col_ind, this)
 
         # Display the resulting frame
         if self.display_type is self.DISPLAY_FINAL:
