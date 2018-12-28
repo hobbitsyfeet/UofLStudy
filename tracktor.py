@@ -11,7 +11,7 @@ class tracktor():
         s_id ="NO_ID",
         colour = (0,0,255),
         block_size = 51, offset = 20,
-        min_area = 100, max_area = 1000,
+        min_area = 5000, max_area = 9000,
         scaling = 1.0
         ):
 
@@ -49,7 +49,7 @@ class tracktor():
 
         # mot determines whether the tracker is being used in noisy conditions to track a single object or for multi-object
         # using this will enable k-means clustering to force n_inds number of animals
-        self.mot = True
+        self.mot = False
 
         codec = 'DIVX' # try other codecs if the default doesn't work ('DIVX', 'avc1', 'XVID') note: this list is non-exhaustive
 

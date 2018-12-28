@@ -19,7 +19,7 @@ class VideoCapture:
         self.current_frame = 0
         self.last_frame = self.current_frame
 
-        self.trackers = [tracktor()]
+        self.trackers = []
 
         #randomize colour
         for i in range(len(self.trackers)):
@@ -51,29 +51,31 @@ class VideoCapture:
             ret, frame = self.vid.read()
             # Apply mask to aarea of interest\n",
             ret,frame = self.process(self.trackers[individual],frame,self.current_frame)
-            x = int(floor(self.trackers[individual].meas_now[0][0]))
-            y = int(floor(self.trackers[individual].meas_now[0][1]))
-            try:
-                roi = frame[int(y- (self.height + self.height/self.zoom)):y + int(self.height/self.zoom),
-                            int(x -(self.width + self.width/self.zoom)):x + int(self.width/self.zoom)]
-            except:
-                print("Cannot focus frame")
+            if ret is True:
+                x = int(floor(self.trackers[individual].meas_now[0][0]))
+                y = int(floor(self.trackers[individual].meas_now[0][1]))
+                try:
+                    roi = frame[int(y- (self.height + self.height/self.zoom)):y + int(self.height/self.zoom),
+                                int(x -(self.width + self.width/self.zoom)):x + int(self.width/self.zoom)]
+                except:
+                    print("Cannot focus frame")
 
-            roi = cv2.resize(roi, (int(self.width), int(self.height)))
+                roi = cv2.resize(roi, (int(self.width), int(self.height)))
 
 
             if ret:
                 return (roi)
             else:
-                return (None)
+                return (frame)
         else:
-            return (None)
+            return (frame)
 
     def show_all(self,frame):
 
-        for i in range(len(self.trackers)-1):
+        for i in range(len(self.trackers)):
             ret,frame = self.process(self.trackers[i],frame,self.current_frame)
-            cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
+            if ret is True:
+                cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
         return frame
             #frame = self.process(self.trackers[i],frame,self.current_frame)
 
@@ -83,14 +85,12 @@ class VideoCapture:
 
 
             self.current_frame = self.vid.get(cv2.CAP_PROP_POS_FRAMES)
-
-            if tracking == len(self.trackers):
+            if tracking == self.TRACK_ALL:
 
                 #for i in range(len(self.trackers)):
                 #    self.process(frame,self.trackers[i],self.current_frame)
                 frame = self.show_all(frame)
-
-            if tracking > 0 and tracking != self.TRACK_ALL:
+            if tracking != self.TRACK_ALL:
                 frame = self.get_focused_frame(frame,tracking)
 
             if ret:
@@ -107,19 +107,23 @@ class VideoCapture:
         #preprocess the frames, adding a threshold, erode and dialing to
 
         #eliminate small noise
+        try:
+            thresh = tracktor.colour_to_thresh(frame)
+            thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
+            thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
 
-        thresh = tracktor.colour_to_thresh(frame)
-        thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
-        thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
 
+            #from our current frame, draw contours and display it on final frame
+            final, contours = tracktor.detect_and_draw_contours(frame, thresh)
+            #calculate cost of previous to currentmouse_video
+            row_ind, col_ind = tracktor.hungarian_algorithm()
 
-        #from our current frame, draw contours and display it on final frame
-        final, contours = tracktor.detect_and_draw_contours(frame, thresh)
-        #calculate cost of previous to currentmouse_video
-        row_ind, col_ind = tracktor.hungarian_algorithm()
-
-        #try to re-draw, separate try-except block allows redraw of min_area/max_area
-        final = tracktor.reorder_and_draw(final, col_ind, this)
+            #try to re-draw, separate try-except block allows redraw of min_area/max_area
+            final = tracktor.reorder_and_draw(final, col_ind, this)
+            ret = True
+        except:
+            ret = False
+            return ret,frame
 
         # Display the resulting frame
 
