@@ -10,26 +10,21 @@ import PIL.Image, PIL.ImageTk
 import math
 
 class App:
-    def __init__(self, window, window_title, video_source=0):
+    def __init__(self, window, window_title):
         self.window = window
         self.window.title(window_title)
 
+
         self.border = 10
-        self.video_source = video_source
         self.number_of_trackers = 1
 
         self.working_number = 1
 
         self.play_state = False
 
-
-        # open video source (by default this will try to open the computer webcam)
-        self.vid = VideoCapture(self.video_source)
-        self.window_width = self.vid.width
-        self.window_height = self.vid.height
-
         #set min window size to the videocapture size
-        #window.minsize(int(self.vid.width),int(self.vid.height))
+        self.load_file()
+        
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
 
@@ -45,33 +40,11 @@ class App:
         self.edit_menu = tkinter.Menu(self.menu, tearoff = 0)
         self.menu.add_cascade(label = "Edit", menu = self.edit_menu)
 
-        #self.file_menu.grid(row=0, column = 0)
-        self.canvas = self.setup_canvas()
-        self.canvas_focused = self.setup_canvas_focused()
 
 
-        self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_bar_label.grid(column = 6,row=3,columnspan = 2, sticky = "NW")
-        #self.frame_bar_label.pack()
-
-        #frame_bar is a scale to the length of the video, controlling which frame the video shows
-        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
-        self.frame_bar.config(length = self.vid.width)
-        self.frame_bar.grid(column = 2,row=2,columnspan = 9, sticky = "SW")
-
-        self.nudge_left = ttk.Button(window,text = "<", command = self.previous_frame,width = 2)
-        self.nudge_left.grid(row = 2,column = 1,sticky = "E")
-
-        self.nudge_left = ttk.Button(window,text = ">", command = self.next_frame,width = 2)
-        self.nudge_left.grid(row = 2,column = 10,sticky = "W")
+        #window.minsize(int(self.vid.width* 2),int(self.vid.height))
 
 
-        #buttons for videos
-        self.play = ttk.Button(window,text = "Play", command = self.play)
-        self.play.grid(row = 2,column = 0,sticky = "E")
-
-        self.pause = ttk.Button(window,text = "Pause", command = self.pause)
-        self.pause.grid(row = 2,column = 1,sticky = "W")
 
 
 
@@ -81,7 +54,7 @@ class App:
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 20
-        self.update()
+        #loads file and sets up canvases from the new file
 
         self.window.mainloop()
 
@@ -99,6 +72,29 @@ class App:
         canvas_focused.grid(column = 7,columnspan = 6,row=1)
         #self.vid.resize_video(self.window_width,self.window_height)
         return canvas_focused
+
+    def setup_video_functions(self):
+        self.frame_bar_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
+        self.frame_bar_label.grid(column = 6,row=3,columnspan = 2, sticky = "NW")
+
+        #frame_bar is a scale to the length of the video, controlling which frame the video shows
+        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
+        self.frame_bar.config(length = self.vid.width)
+        self.frame_bar.grid(column = 2,row=2,columnspan = 9, sticky = "SW")
+
+        self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
+        self.nudge_left.grid(row = 2,column = 1,sticky = "E")
+
+        self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame,width = 2)
+        self.nudge_left.grid(row = 2,column = 10,sticky = "W")
+
+
+        #buttons for videos
+        self.play = ttk.Button(self.window,text = "Play", command = self.play)
+        self.play.grid(row = 2,column = 0,sticky = "E")
+
+        self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
+        self.pause.grid(row = 2,column = 1,sticky = "W")
 
 
     def update(self):
@@ -189,13 +185,20 @@ class App:
 
         print(file)
         if file != '':
-            del self.vid
+            try:
+                del self.vid
+            except: pass
             self.vid = VideoCapture(file)
             self.window_width = self.vid.width
             self.window_height = self.vid.height
             self.canvas = self.setup_canvas()
             self.canvas_focused = self.setup_canvas_focused()
 
+            self.setup_video_functions()
+
             self.update()
+
+
+
     def donothing(self):
         pass
