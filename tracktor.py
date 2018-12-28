@@ -11,7 +11,7 @@ class tracktor():
         s_id ="NO_ID",
         colour = (0,0,255),
         block_size = 51, offset = 20,
-        min_area = 5000, max_area = 9000,
+        min_area = 100, max_area = 5000,
         scaling = 1.0
         ):
 

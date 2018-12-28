@@ -142,7 +142,7 @@ class App:
         self.block_size_label.grid(column = 6,row=5,columnspan = 2, sticky = "NW")
         self.block_size_label.config(text = "Block_size:" + str(self.vid.trackers[self.working_number].block_size))
 
-        self.min_area_bar  = ttk.Scale(from_=0, to = 100000,command = self.set_min_area)
+        self.min_area_bar  = ttk.Scale(from_=0, to = 50000,command = self.set_min_area)
         self.min_area_bar.config(length = self.vid.width)
         self.min_area_bar.config(value = self.vid.trackers[self.working_number].min_area)
         self.min_area_bar.grid(column = 2,row=6,columnspan = 2, sticky = "SW")
@@ -150,7 +150,7 @@ class App:
         self.min_area_label.grid(column = 6,row=6,columnspan = 2, sticky = "NW")
         self.min_area_label.config(text = "Min_area:" + str(self.vid.trackers[self.working_number].min_area))
 
-        self.max_area_bar  = ttk.Scale(from_=0, to = 100000,command = self.set_max_area)
+        self.max_area_bar  = ttk.Scale(from_=0, to = 50000,command = self.set_max_area)
         self.max_area_bar.config(length = self.vid.width)
         self.max_area_bar.grid(column = 2,row=7,columnspan = 2, sticky = "SW")
         self.max_area_label = ttk.Label(font = ('Helvetica', '16') )
