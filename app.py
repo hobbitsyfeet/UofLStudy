@@ -53,7 +53,7 @@ class App:
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
         # After it is called once, the update method will be automatically called every delay milliseconds
-        self.delay = 20
+        self.delay = 1
         #loads file and sets up canvases from the new file
 
         self.window.mainloop()
