@@ -269,6 +269,7 @@ class App:
         #get the config value for the current viewed tracker
         self.max_area_bar.config(value = max_area)
         self.max_area_label.config(text = "Max_area:" + str(max_area))
+        self.set_frame_pos(self.vid.current_frame-1)
 
     def save_profile(self):
         pass
