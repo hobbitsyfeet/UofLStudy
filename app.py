@@ -14,16 +14,13 @@ class App:
         self.window = window
         self.window.title(window_title)
 
-
-        self.border = 10
+        self.window_width = 1080
+        self.window_height = 720
         self.number_of_trackers = 3
-
 
         self.working_number = 0
 
         self.play_state = False
-
-
 
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
@@ -40,12 +37,16 @@ class App:
         self.edit_menu = tkinter.Menu(self.menu, tearoff = 0)
         self.menu.add_cascade(label = "Edit", menu = self.edit_menu)
 
+        #buttons for videos
+        self.play = ttk.Button(self.window,text = "Play", command = self.play)
+        self.play.grid(row = 2,column = 0,sticky = "E")
 
+        self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
+        self.pause.grid(row = 2,column = 1,sticky = "W")
 
         #set min window size to the videocapture size
         self.load_file()
         self.vid.TRACK_ALL = self.number_of_trackers+1
-        #window.minsize(int(self.vid.width* 2),int(self.vid.height))
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -60,44 +61,28 @@ class App:
         canvas = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height , cursor = "crosshair")
         canvas.bind("<Button-1>", self.callback1)
         canvas.grid(column = 0, columnspan = 6,row=1,ipady = 1)
-        #self.vid.resize_video(self.window_width/2,self.window_height)
         return canvas
-
-    def setup_canvas_focused(self):
-        canvas_focused = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height, cursor = "crosshair")
-        canvas_focused.bind("<Button-1>", self.callback1)
-        canvas_focused.grid(column = 7,columnspan = 6,row=1)
-        #self.vid.resize_video(self.window_width,self.window_height)
-        return canvas_focused
 
     def setup_video_functions(self):
 
         #For choosing current frame
         self.frame_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_label.grid(column = 6,row=3,columnspan = 2, sticky = "NW")
+        self.frame_label.grid(row=3,column = 6, sticky = "NW")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
-        self.frame_bar.config(length = self.vid.width)
-        self.frame_bar.grid(column = 2,row=2,columnspan = 9, sticky = "SW")
+        self.frame_bar.config(length = self.window_width)
+        self.frame_bar.grid(row=3,column = 1)
 
-        self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
-        self.nudge_left.grid(row = 2,column = 1,sticky = "E")
+        #self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
+        #self.nudge_left.grid(row = 2,column = 1,sticky = "E")
 
-        self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame,width = 2)
-        self.nudge_left.grid(row = 2,column = 10,sticky = "W")
-
-
-        #buttons for videos
-        self.play = ttk.Button(self.window,text = "Play", command = self.play)
-        self.play.grid(row = 2,column = 0,sticky = "E")
-
-        self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
-        self.pause.grid(row = 2,column = 1,sticky = "W")
+        #self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame,width = 2)
+        #self.nudge_left.grid(row = 2,column = 3,sticky = "W")
 
         # Add a grid for dropdown
         mainframe = tkinter.Frame(self.window)
-        mainframe.grid(column=0,row=0, sticky="NW" )
+        mainframe.grid(row=0,column=0, sticky="NW" )
         mainframe.columnconfigure(5, weight = 1)
         mainframe.rowconfigure(5, weight = 1)
         #add trackers to set number
@@ -126,35 +111,36 @@ class App:
         tkinter.Label(mainframe, text="Tracked Individual").grid(row = 1, column = 1)
         popupMenu.grid(row = 2, column =1)
 
+
         self.offset_bar  = ttk.Scale(from_=0, to = 100,command = self.set_offset)
-        self.offset_bar.config(length = self.vid.width)
+        self.offset_bar.config(length = self.window_width)
         self.offset_bar.config(value = self.vid.trackers[self.working_number].offset)
-        self.offset_bar.grid(column = 2,row=4,columnspan = 2, sticky = "SW")
+        self.offset_bar.grid(row=4, column = 1, sticky = "SW")
         self.offset_label = ttk.Label(font = ('Helvetica', '16') )
-        self.offset_label.grid(column = 6,row=4,columnspan = 2, sticky = "NW")
+        self.offset_label.grid(row=4, column = 6, sticky = "NW")
         self.offset_label.config(text = "Offset:" + str(self.vid.trackers[self.working_number].offset))
 
         self.block_size_bar  = ttk.Scale(from_=0, to = 100,command = self.set_blocksize)
-        self.block_size_bar.config(length = self.vid.width)
+        self.block_size_bar.config(length = self.window_width)
         self.block_size_bar.config(value = self.vid.trackers[self.working_number].block_size)
-        self.block_size_bar.grid(column = 2,row=5,columnspan = 2, sticky = "SW")
+        self.block_size_bar.grid(row=5, column = 1, sticky = "SW")
         self.block_size_label = ttk.Label(font = ('Helvetica', '16') )
-        self.block_size_label.grid(column = 6,row=5,columnspan = 2, sticky = "NW")
+        self.block_size_label.grid(row=5,column = 6, sticky = "NW")
         self.block_size_label.config(text = "Block_size:" + str(self.vid.trackers[self.working_number].block_size))
 
         self.min_area_bar  = ttk.Scale(from_=0, to = 50000,command = self.set_min_area)
-        self.min_area_bar.config(length = self.vid.width)
+        self.min_area_bar.config(length = self.window_width)
         self.min_area_bar.config(value = self.vid.trackers[self.working_number].min_area)
-        self.min_area_bar.grid(column = 2,row=6,columnspan = 2, sticky = "SW")
+        self.min_area_bar.grid(row=6, column = 1, sticky = "SW")
         self.min_area_label = ttk.Label(font = ('Helvetica', '16') )
-        self.min_area_label.grid(column = 6,row=6,columnspan = 2, sticky = "NW")
+        self.min_area_label.grid(row=6,column = 6, sticky = "NW")
         self.min_area_label.config(text = "Min_area:" + str(self.vid.trackers[self.working_number].min_area))
 
         self.max_area_bar  = ttk.Scale(from_=0, to = 50000,command = self.set_max_area)
-        self.max_area_bar.config(length = self.vid.width)
-        self.max_area_bar.grid(column = 2,row=7,columnspan = 2, sticky = "SW")
+        self.max_area_bar.config(length = self.window_width)
+        self.max_area_bar.grid(row=7,column = 1, sticky = "SW")
         self.max_area_label = ttk.Label(font = ('Helvetica', '16') )
-        self.max_area_label.grid(column = 6,row=7,columnspan = 2, sticky = "NW")
+        self.max_area_label.grid(row=7,column = 6, sticky = "NW")
         self.max_area_label.config(text = "Max_area:" + str(self.vid.trackers[self.working_number].max_area))
 
         # on change dropdown value
@@ -171,9 +157,6 @@ class App:
                 self.working_number = i
                 return i
 
-
-
-
     def update(self):
         self.find_tracker_index_by_id(self.tkvar.get())
         # Get a frame from the video source
@@ -183,6 +166,7 @@ class App:
         if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(self.working_number)
+            frame = cv2.resize(frame,(int(1080),(int(720))),cv2.INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text ="Frame:" + str(int(self.vid.current_frame)))
@@ -242,6 +226,7 @@ class App:
         #set local for ease of use
         offset = math.floor(float(value))
         self.vid.trackers[self.working_number].offset = offset
+        self.set_frame_pos(self.vid.current_frame-1)
 
         #get the config value for the current viewed tracker
         self.offset_bar.config(value = offset)
@@ -254,6 +239,7 @@ class App:
         #get the config value for the current viewed tracker
         self.block_size_bar.config(value = block_size)
         self.block_size_bar.config(text = "Block_size:" + str(block_size))
+        self.set_frame_pos(self.vid.current_frame-1)
 
 
     def set_min_area(self,value):
@@ -264,6 +250,7 @@ class App:
         #get the config value for the current viewed tracker
         self.min_area_bar.config(value = min_area)
         self.min_area_label.config(text = "Min_area:" + str(min_area))
+        self.set_frame_pos(self.vid.current_frame-1)
 
 
     def set_max_area(self,value):
@@ -290,11 +277,9 @@ class App:
             try:
                 del self.vid
             except: pass
+            self.play_state = False
             self.vid = VideoCapture(file)
-            self.window_width = self.vid.width
-            self.window_height = self.vid.height
             self.canvas = self.setup_canvas()
-            #self.canvas_focused = self.setup_canvas_focused()
             self.setup_video_functions()
             self.update()
 
