@@ -146,13 +146,11 @@ class App:
             return self.vid.TRACK_ALL
         for i in range(len(self.vid.trackers)):
             if name == self.vid.trackers[i].s_id:
-                print(name)
                 return i
         else: return 0
 
     def update(self):
         self.working_number = self.find_tracker_index_by_id(self.tkvar.get())
-        print(self.working_number)
         # Get a frame from the video source
         self.frame_label.config(text = "Frame:"+str(int(self.vid.current_frame)))
 
@@ -234,7 +232,8 @@ class App:
         #set local for ease of use
         offset = math.floor(float(value))
         self.vid.trackers[self.working_number].offset = offset
-        self.set_frame_pos(self.vid.current_frame-1)
+        if self.play_state is False:
+            self.set_frame_pos(self.vid.current_frame-1)
 
         #get the config value for the current viewed tracker
         self.offset_bar.config(value = offset)
@@ -247,7 +246,8 @@ class App:
         #get the config value for the current viewed tracker
         self.block_size_bar.config(value = block_size)
         self.block_size_bar.config(text = "Block_size:" + str(block_size))
-        self.set_frame_pos(self.vid.current_frame-1)
+        if self.play_state is False:
+            self.set_frame_pos(self.vid.current_frame-1)
 
 
     def set_min_area(self,value):
@@ -258,7 +258,8 @@ class App:
         #get the config value for the current viewed tracker
         self.min_area_bar.config(value = min_area)
         self.min_area_label.config(text = "Min_area:" + str(min_area))
-        self.set_frame_pos(self.vid.current_frame-1)
+        if self.play_state is False:
+            self.set_frame_pos(self.vid.current_frame-1)
 
 
     def set_max_area(self,value):
@@ -269,7 +270,8 @@ class App:
         #get the config value for the current viewed tracker
         self.max_area_bar.config(value = max_area)
         self.max_area_label.config(text = "Max_area:" + str(max_area))
-        self.set_frame_pos(self.vid.current_frame-1)
+        if self.play_state is False:
+            self.set_frame_pos(self.vid.current_frame-1)
 
     def save_profile(self):
         pass
