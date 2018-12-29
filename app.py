@@ -36,6 +36,8 @@ class App:
 
         self.edit_menu = tkinter.Menu(self.menu, tearoff = 0)
         self.menu.add_cascade(label = "Edit", menu = self.edit_menu)
+        self.edit_menu.add_command(label="New Trackers", command=self.create_tracker)
+        self.edit_menu.add_command(label="Delete Trackers", command = self.donothing)
 
         #buttons for videos
         self.play = ttk.Button(self.window,text = "Play", command = self.play)
@@ -46,7 +48,7 @@ class App:
 
         #set min window size to the videocapture size
         self.load_file()
-        self.vid.TRACK_ALL = self.number_of_trackers+1
+        self.vid.TRACK_ALL = -1
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -81,35 +83,25 @@ class App:
         #self.nudge_left.grid(row = 2,column = 3,sticky = "W")
 
         # Add a grid for dropdown
-        mainframe = tkinter.Frame(self.window)
-        mainframe.grid(row=0,column=0, sticky="NW" )
-        mainframe.columnconfigure(5, weight = 1)
-        mainframe.rowconfigure(5, weight = 1)
-        #add trackers to set number
-        for i in range(self.number_of_trackers):
-            self.vid.add_tracker()
+        self.mainframe = tkinter.Frame(self.window)
+        self.mainframe.grid(row=0,column=0, sticky="NW" )
+        self.mainframe.columnconfigure(5, weight = 1)
+        self.mainframe.rowconfigure(5, weight = 1)
+
 
         # Create a Tkinter variable
         self.tkvar = tkinter.StringVar(self.window)
 
-        # Dictionary with options
-        choices = []
-        for i in range(len(self.vid.trackers)):
-            if i == 0:
-                choices.append(self.vid.trackers[i].s_id + str(i))
-            #add value to NO_ID
-            self.vid.trackers[i].s_id += str(i)
-            choices.append(self.vid.trackers[i].s_id)
-        choices.append("All")
-
-
-        #set the initial value
-        self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
-
+        self.choices = []
+        self.choices.append("NONE")
+        self.choices.append("All")
+        #add trackers to set number
+        for i in range(self.number_of_trackers):
+            self.create_tracker()
         #setup the menu
-        popupMenu = ttk.OptionMenu(mainframe, self.tkvar, *choices)
-        tkinter.Label(mainframe, text="Tracked Individual").grid(row = 1, column = 1)
-        popupMenu.grid(row = 2, column =1)
+        self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
+        tkinter.Label(self.mainframe, text="Tracked Individual").grid(row = 1, column = 1)
+        self.popupMenu.grid(row = 2, column =1)
 
 
         self.offset_bar  = ttk.Scale(from_=0, to = 100,command = self.set_offset)
@@ -143,22 +135,24 @@ class App:
         self.max_area_label.grid(row=7,column = 6, sticky = "NW")
         self.max_area_label.config(text = "Max_area:" + str(self.vid.trackers[self.working_number].max_area))
 
-        # on change dropdown value
+    # on change dropdown value
     def change_dropdown(*args):
         pass
         # link function to change dropdown
-        #self.tkvar.trace(find_tracker_index_by_id,change_dropdown)
+        self.tkvar.trace(change_dropdown)
 
     def find_tracker_index_by_id(self,name):
         if name == "All":
-            self.working_number = self.vid.TRACK_ALL
+            return self.vid.TRACK_ALL
         for i in range(len(self.vid.trackers)):
             if name == self.vid.trackers[i].s_id:
-                self.working_number = i
+                print(name)
                 return i
+        else: return 0
 
     def update(self):
-        self.find_tracker_index_by_id(self.tkvar.get())
+        self.working_number = self.find_tracker_index_by_id(self.tkvar.get())
+        print(self.working_number)
         # Get a frame from the video source
         self.frame_label.config(text = "Frame:"+str(int(self.vid.current_frame)))
 
@@ -213,6 +207,20 @@ class App:
 
     def set_frame_bar(self):
         self.frame_bar.config(value = self.vid.current_frame)
+
+
+    def create_tracker(self):
+        #add a tracker in the video
+        self.vid.add_tracker()
+        index = len(self.vid.trackers)-1
+        #add value to NO_ID
+        self.vid.trackers[index].s_id += str(index)
+        self.choices.append(self.vid.trackers[index].s_id)
+        #set the initial value
+        self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
+        self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
+        self.popupMenu.grid(row = 2, column =1)
+
 
 
     def set_frame_pos(self,value):

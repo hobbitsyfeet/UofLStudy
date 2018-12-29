@@ -33,7 +33,7 @@ class VideoCapture:
 
         #tracking constants for getting frame types
         self.NO_TRACKING = 0
-        self.TRACK_ALL = len(self.trackers)+1
+        self.TRACK_ALL = -1
 
         #assignment we use to choose different processes
         self.display_type = self.DISPLAY_FINAL
@@ -74,7 +74,7 @@ class VideoCapture:
     def show_all(self,frame):
 
         for i in range(len(self.trackers)):
-            ret,frame = self.process(self.trackers[i],frame,self.current_frame)
+            ret,frame = self.process(self.trackers[i],frame,self.current_frame,detail = False)
             if ret is True:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
         return frame
@@ -104,7 +104,7 @@ class VideoCapture:
     def initVideo(self):
         return ret,frame
 
-    def process(self,tracktor,frame,this):
+    def process(self,tracktor,frame,this,detail=True):
         #preprocess the frames, adding a threshold, erode and dialing to
 
         #eliminate small noise
@@ -133,7 +133,6 @@ class VideoCapture:
     def add_tracker(self):
         self.trackers.append(tracktor())
         self.trackers[-1].colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1))
-
     def delete_tracker(self,index):
         del trackers[index]
 

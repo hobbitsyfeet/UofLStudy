@@ -141,7 +141,7 @@ class tracktor():
             if area < self.min_area or area > self.max_area:
                 del contours[i]
             else:
-                cv2.drawContours(final, contours, i, (0,0,255), 1)
+                #cv2.drawContours(final, contours, i, (0,0,255), 1)
                 M = cv2.moments(contours[i])
                 if M['m00'] != 0:
                 	cx = M['m10']/M['m00']
