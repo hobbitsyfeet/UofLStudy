@@ -51,6 +51,8 @@ class tracktor():
         # using this will enable k-means clustering to force n_inds number of animals
         self.mot = False
 
+        df = []
+
         codec = 'DIVX' # try other codecs if the default doesn't work ('DIVX', 'avc1', 'XVID') note: this list is non-exhaustive
 
         ## Video writer class to output video with contour and centroid of tracked object(s)
@@ -134,7 +136,7 @@ class tracktor():
         i = 0
         self.meas_last = self.meas_now.copy()
         #del self.meas_now[:]
-        #assigning to empty doesn't crash
+        #assigning to empty doesn't crash, less efficient but a size of 2 wont make a difference
         self.meas_now = []
         while i < len(contours):
             area = cv2.contourArea(contours[i])
