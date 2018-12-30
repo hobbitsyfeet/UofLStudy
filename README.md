@@ -3,7 +3,7 @@ This is the github repository for Justin Petluk's Independent study at Universit
 
 This will become a tool in which to use Tracktor to export data in a more intuitive way.
 
-![Screenshot]( https://github.com/hobbitsyfeet/UofLStudy/blob/master/tracktor.PNG)
+![Screenshot]( https://github.com/hobbitsyfeet/UofLStudy/blob/master/docs/tracktor.PNG)
 _________________________________________________
 Tracktor's information
 
