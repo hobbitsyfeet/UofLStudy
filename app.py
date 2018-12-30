@@ -313,7 +313,7 @@ class App:
 
             # Get a frame from the video source, already processed
             ret, frame = self.vid.get_frame(self.working_number)
-            print("loading: " + str(self.vid.current_frame) + " of "+ str(self.vid.length))
+            print("loading: " + str(int(self.vid.current_frame)) + " of "+ str(int(self.vid.length)))
 
             #frame already processed, retreive data from that frame, store it in each trackers
             for i in range(len(self.vid.trackers)):
