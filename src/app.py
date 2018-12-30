@@ -1,22 +1,27 @@
 # coding:utf-8
-from video import VideoCapture
+#from tracktor_ui import dialog
+#from video import VideoCapture
+
+from video_process.video import VideoCapture
+from tracktor_ui.dialog import Dialog
+
+import PIL.Image, PIL.ImageTk
+import math
+import pandas as pd
+import numpy.matrixlib as np
 import time
 import cv2
 import tkinter
 from tkinter import ttk
 import tkinter.filedialog as fileDialog
-#from tkinter import ttk.Label, ttk.Button
-import PIL.Image, PIL.ImageTk
-import math
-import pandas as pd
-import numpy.matrixlib as np
+
 
 class App:
     def __init__(self, window, window_title):
         self.window = window
         self.window.title(window_title)
 
-        self.output_path = "./output/"
+        self.output_path = "../output/"
 
         self.window_width = 1080
         self.window_height = 720

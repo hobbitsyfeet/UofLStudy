@@ -1,4 +1,6 @@
-from tracktor import tracktor
+#from YourClassParentDir.YourClass import YourClass
+from video_process.tracktor import tracktor
+#import tracktor
 import cv2
 import numpy as np
 from math import floor
