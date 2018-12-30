@@ -1,10 +1,10 @@
 #from YourClassParentDir.YourClass import YourClass
 from video_process.tracktor import tracktor
-#import tracktor
+#import tracktor.tracktor
 import cv2
 import numpy as np
 from math import floor
-from random import randrange
+
 
 class VideoCapture:
     def __init__(self, video_source=""):
@@ -21,16 +21,15 @@ class VideoCapture:
 
         self.current_frame = 0
         self.last_frame = self.current_frame
+        self.play_state = False
 
+        self.working_number = 0
         self.trackers = []
 
-        #randomize colour
-        for i in range(len(self.trackers)):
-            self.trackers[i].colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1))
-
         #tracking constants for getting frame types
-        self.NO_TRACKING = 0
+
         self.TRACK_ALL = -1
+        self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
         self.zoom = 4
@@ -41,7 +40,33 @@ class VideoCapture:
     def set_frame(self, value):
         self.vid.set(cv2.CAP_PROP_POS_FRAMES,value)
 
+
+
+    def get_frame(self,tracking = 0):
+        """
+        Description: get frame gets the tracking number, and depending on the
+        tracking, we determine what to track (-2: NONE, -1 ALL, 1...n tracking index)
+        """
+        if self.vid.isOpened():
+            #grab a frame
+            ret, frame = self.vid.read()
+            #set the current frame number to the frame we just received
+            self.current_frame = self.vid.get(cv2.CAP_PROP_POS_FRAMES)
+            if tracking == self.NO_TRACKING:
+                return (ret,frame)
+            elif tracking == self.TRACK_ALL:
+                frame = self.show_all(frame)
+
+            elif tracking != self.TRACK_ALL:
+                frame = self.get_focused_frame(frame,tracking)
+        if ret:
+            return (ret,frame)
+
     def get_focused_frame(self,frame,individual):
+        """
+        Description: This function returns a frame centered and zoomed in on the
+        individual being tracked.
+        """
         if self.vid.isOpened():
             # Apply mask to aarea of interest\n",
             ret,frame = self.process(self.trackers[individual],frame,self.current_frame)
@@ -53,10 +78,7 @@ class VideoCapture:
                                 int(x -(self.width + self.width/self.zoom)):x + int(self.width/self.zoom)]
                 except:
                     print("Cannot focus frame")
-
                 roi = cv2.resize(roi, (int(self.width), int(self.height)))
-
-
             if ret:
                 return (roi)
             else:
@@ -65,39 +87,24 @@ class VideoCapture:
             return (frame)
 
     def show_all(self,frame):
-
+        """
+        Description: this function returns a frame that shows all of the tracked individuals
+        """
+        #iterate through all
         for i in range(len(self.trackers)):
             ret,frame = self.process(self.trackers[i],frame,self.current_frame,detail = False)
             if ret is True:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
         return frame
-            #frame = self.process(self.trackers[i],frame,self.current_frame)
-
-    def get_frame(self,tracking = 0):
-        if self.vid.isOpened():
-            ret, frame = self.vid.read()
-
-
-            self.current_frame = self.vid.get(cv2.CAP_PROP_POS_FRAMES)
-            if tracking == self.TRACK_ALL:
-
-                #for i in range(len(self.trackers)):
-                #    self.process(frame,self.trackers[i],self.current_frame)
-                frame = self.show_all(frame)
-            if tracking != self.TRACK_ALL:
-                frame = self.get_focused_frame(frame,tracking)
-
-            if ret:
-                return (ret,frame)
-            else:
-                return (ret, None)
-        else:
-            return (ret, None)
 
     def initVideo(self):
         return ret,frame
 
     def process(self,tracktor,frame,this,detail=True):
+        """
+        This function takes a frame, and a tracked individua and performs operations
+        on the frame and applies information to the tracktor like x,y coordinates
+        """
         #preprocess the frames, adding a threshold, erode and dialing to
 
         #eliminate small noise
@@ -124,10 +131,20 @@ class VideoCapture:
         return (True,final)
 
     def add_tracker(self):
+        """
+        """
         self.trackers.append(tracktor())
-        self.trackers[-1].colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1))
+
     def delete_tracker(self,index):
         del trackers[index]
+
+    #search the list of trackers by name and return -1 if not fouond
+    def find_tracker_index_by_id(self,name):
+        for i in range(len(self.trackers)):
+            if name == self.trackers[i].s_id:
+                return i
+        else:
+            return -1
 
     # Release the video source when the object is destroyed
     def __del__(self):
