@@ -49,7 +49,7 @@ class VideoCapture:
 
     def get_focused_frame(self,frame,individual):
         if self.vid.isOpened():
-            ret, frame = self.vid.read()
+            #ret, frame = self.vid.read()
             # Apply mask to aarea of interest\n",
             ret,frame = self.process(self.trackers[individual],frame,self.current_frame)
             if ret is True:
