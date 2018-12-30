@@ -28,17 +28,9 @@ class VideoCapture:
         for i in range(len(self.trackers)):
             self.trackers[i].colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1))
 
-        #constants for interaction
-        self.DISPLAY_FINAL = 0
-        self.DISPLAY_THRESH = 1
-        self.PAUSE_VIDEO = 3
-
         #tracking constants for getting frame types
         self.NO_TRACKING = 0
         self.TRACK_ALL = -1
-
-        #assignment we use to choose different processes
-        self.display_type = self.DISPLAY_FINAL
 
         #zoom variable for setting focused frame
         self.zoom = 4
