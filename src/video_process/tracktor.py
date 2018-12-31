@@ -5,11 +5,12 @@ import sys
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
+from random import randrange
 
 class tracktor():
     def __init__(self,
         s_id ="NO_ID",
-        colour = (0,0,255),
+        colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1)),
         block_size = 51, offset = 20,
         min_area = 100, max_area = 5000,
         scaling = 1.0

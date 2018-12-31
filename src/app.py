@@ -3,6 +3,7 @@
 #from video import VideoCapture
 
 from video_process.video import VideoCapture
+from tracktor_ui import tracktorOptions
 from tracktor_ui.dialog import Dialog
 
 import PIL.Image, PIL.ImageTk
@@ -58,7 +59,10 @@ class App:
 
         #set min window size to the videocapture size
         self.load_file()
-        self.vid.TRACK_ALL = -1
+
+
+
+        #self.vid.TRACK_ALL = -1
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -113,54 +117,35 @@ class App:
         tkinter.Label(self.mainframe, text="Tracked Individual").grid(row = 1, column = 1)
         self.popupMenu.grid(row = 2, column =1)
 
+        offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset",
+                                self.working_number,
+                                min= 1, max= 100,
+                                row= 4, column= 2
+                                )
 
-        self.offset_bar  = ttk.Scale(from_=0, to = 100,command = self.set_offset)
-        self.offset_bar.config(length = self.window_width)
-        self.offset_bar.config(value = self.vid.trackers[self.working_number].offset)
-        self.offset_bar.grid(row=4, column = 1, sticky = "SW")
-        self.offset_label = ttk.Label(font = ('Helvetica', '16') )
-        self.offset_label.grid(row=4, column = 6, sticky = "NW")
-        self.offset_label.config(text = "Offset:" + str(self.vid.trackers[self.working_number].offset))
-
-        self.block_size_bar  = ttk.Scale(from_=0, to = 100,command = self.set_blocksize)
-        self.block_size_bar.config(length = self.window_width)
-        self.block_size_bar.config(value = self.vid.trackers[self.working_number].block_size)
-        self.block_size_bar.grid(row=5, column = 1, sticky = "SW")
-        self.block_size_label = ttk.Label(font = ('Helvetica', '16') )
-        self.block_size_label.grid(row=5,column = 6, sticky = "NW")
-        self.block_size_label.config(text = "Block_size:" + str(self.vid.trackers[self.working_number].block_size))
-
-        self.min_area_bar  = ttk.Scale(from_=0, to = 50000,command = self.set_min_area)
-        self.min_area_bar.config(length = self.window_width)
-        self.min_area_bar.config(value = self.vid.trackers[self.working_number].min_area)
-        self.min_area_bar.grid(row=6, column = 1, sticky = "SW")
-        self.min_area_label = ttk.Label(font = ('Helvetica', '16') )
-        self.min_area_label.grid(row=6,column = 6, sticky = "NW")
-        self.min_area_label.config(text = "Min_area:" + str(self.vid.trackers[self.working_number].min_area))
-
-        self.max_area_bar  = ttk.Scale(from_=0, to = 50000,command = self.set_max_area)
-        self.max_area_bar.config(length = self.window_width)
-        self.max_area_bar.grid(row=7,column = 1, sticky = "SW")
-        self.max_area_label = ttk.Label(font = ('Helvetica', '16') )
-        self.max_area_label.grid(row=7,column = 6, sticky = "NW")
-        self.max_area_label.config(text = "Max_area:" + str(self.vid.trackers[self.working_number].max_area))
-
+        block_size_bar = tracktorOptions.data_bar(self.window, self.vid, "Blocksize",
+                                self.working_number,
+                                min= 1, max= 100,
+                                row= 5, column= 2
+                                )
+        min_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MinArea",
+                                self.working_number,
+                                min= 1, max= 5000,
+                                row= 6, column= 2
+                                )
+        max_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MaxArea",
+                                self.working_number,
+                                min= 1, max= 5000,
+                                row= 7, column= 2
+                                )
     # on change dropdown value
     def change_dropdown(*args):
         pass
         # link function to change dropdown
         self.tkvar.trace(change_dropdown)
 
-    def find_tracker_index_by_id(self,name):
-        if name == "All":
-            return self.vid.TRACK_ALL
-        for i in range(len(self.vid.trackers)):
-            if name == self.vid.trackers[i].s_id:
-                return i
-        else: return 0
-
     def update(self):
-        self.working_number = self.find_tracker_index_by_id(self.tkvar.get())
+        self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
         # Get a frame from the video source
         self.frame_label.config(text = "Frame:"+str(int(self.vid.current_frame)))
 
@@ -238,51 +223,6 @@ class App:
             self.update()
             #self.window.after(self.delay, )
 
-    def set_offset(self,value):
-        #set local for ease of use
-        offset = math.floor(float(value))
-        self.vid.trackers[self.working_number].offset = offset
-        if self.play_state is False:
-            self.set_frame_pos(self.vid.current_frame-1)
-
-        #get the config value for the current viewed tracker
-        self.offset_bar.config(value = offset)
-        self.offset_label.config(text = "Offset:" + str(offset))
-
-    def set_blocksize(self,value):
-        block_size = math.floor(float(value))
-        self.vid.trackers[self.working_number].block_size = block_size
-
-        #get the config value for the current viewed tracker
-        self.block_size_bar.config(value = block_size)
-        self.block_size_bar.config(text = "Block_size:" + str(block_size))
-        if self.play_state is False:
-            self.set_frame_pos(self.vid.current_frame-1)
-
-
-    def set_min_area(self,value):
-        #set local for ease of use
-        min_area = math.floor(float(value))
-        self.vid.trackers[self.working_number].min_area = min_area
-
-        #get the config value for the current viewed tracker
-        self.min_area_bar.config(value = min_area)
-        self.min_area_label.config(text = "Min_area:" + str(min_area))
-        if self.play_state is False:
-            self.set_frame_pos(self.vid.current_frame-1)
-
-
-    def set_max_area(self,value):
-        #set local for ease of use
-        max_area = math.floor(float(value))
-        self.vid.trackers[self.working_number].max_area = max_area
-
-        #get the config value for the current viewed tracker
-        self.max_area_bar.config(value = max_area)
-        self.max_area_label.config(text = "Max_area:" + str(max_area))
-        if self.play_state is False:
-            self.set_frame_pos(self.vid.current_frame-1)
-
     def save_profile(self):
         pass
 
@@ -308,7 +248,7 @@ class App:
         #self.set_frame_pos(1)
         #print("setting fame to start:" + str(self.vid.current_frame))
         #sets the process to process ALL
-        self.working_number = self.find_tracker_index_by_id("ALL")
+        self.working_number = self.vid.find_tracker_index_by_id("ALL")
         ret = True
 
         for i in range(len(self.vid.trackers)):
