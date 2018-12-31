@@ -17,8 +17,7 @@ class data_bar:
         self.root = root
         self.vid = vid
         self.name = name
-        self.working_number = working_number
-        self.object = self.vid.trackers[working_number]
+        self.object = self.vid.trackers[self.vid.working_number]
 
         #assign value to
         self.min = min
@@ -32,12 +31,23 @@ class data_bar:
         self.scale_name.grid(row = row, column = column - 1, sticky = "E")
 
 
+
     def set(self, value):
+        print (self.vid.working_number)
+        #check the name if we are tracking a new individual, if so set our object
+        if self.object.s_id != self.vid.trackers[self.vid.working_number].s_id:
+
+            self.object = self.vid.trackers[self.vid.working_number]
+            print (self.object.s_id)
+
+        #floor the value to suit the numbers being used
         value = floor(float(value))
         if self.name == "Offset":
             self.object.offset = value
             print("Offset:"+str(value))
         elif self.name == "Blocksize":
+            if value % 2 == 0:
+                value += 1
             self.object.block_size = value
             print("Blocksize:"+str(value))
         elif self.name == "MinArea":

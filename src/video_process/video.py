@@ -4,20 +4,21 @@ from video_process.tracktor import tracktor
 import cv2
 import numpy as np
 from math import floor
+import pandas as pd
 
 
 class VideoCapture:
     def __init__(self, video_source=""):
         # Open the video source
-        self.vid = cv2.VideoCapture(video_source)
-        if not self.vid.isOpened():
+        self.cap = cv2.VideoCapture(video_source)
+        if not self.cap.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
-        self.vid.set(cv2.CAP_PROP_FPS, 60)
+        self.cap.set(cv2.CAP_PROP_FPS, 60)
         # Get video source width, height and length in frames
-        self.width = self.vid.get(cv2.CAP_PROP_FRAME_WIDTH)
-        self.height = self.vid.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.length = self.vid.get(cv2.CAP_PROP_FRAME_COUNT)-4
+        self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        self.length = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)-4
 
         self.current_frame = 0
         self.last_frame = self.current_frame
@@ -26,6 +27,7 @@ class VideoCapture:
         self.working_number = 0
         self.trackers = []
 
+        self.output_path = "../output/"
         #tracking constants for getting frame types
 
         self.TRACK_ALL = -1
@@ -33,13 +35,63 @@ class VideoCapture:
 
         #zoom variable for setting focused frame
         self.zoom = 4
+
+    def export_all(self):
+        #self.set_frame_pos(1)
+        #print("setting fame to start:" + str(self.current_frame))
+        #sets the process to process ALL
+        self.working_number = self.find_tracker_index_by_id("ALL")
+        ret = True
+
+        for i in range(len(self.trackers)):
+            self.trackers[i].df = []
+
+        while(self.current_frame <= self.length):
+
+            # Get a frame from the video source, already processed
+            ret, frame = self.get_frame(self.working_number)
+            print("loading: " + str(int(self.current_frame)) + " of "+ str(int(self.length)))
+
+            #frame already processed, retreive data from that frame, store it in each trackers
+            for i in range(len(self.trackers)):
+                #ignore duplicate frame
+                if len(self.trackers[i].df) > 1:
+                    last_frame = self.trackers[i].df[i-1][0]
+                #it is the first frame and we can simulate the previous_frame
+                else:
+                    last_frame = self.current_frame-1
+
+                #try to append data
+                try:
+                    #if we have a new frame, append it
+                    if self.current_frame != last_frame:
+                        self.trackers[i].df.append([self.current_frame,
+                                                self.trackers[i].meas_now[0][0], #store X coord
+                                                self.trackers[i].meas_now[0][1] #store Y coord
+                                                ])
+                #we received bad data and cannot process it. return -1
+                except:
+                    print("Could not get location from" + self.trackers[i].s_id +
+                                "at frame " + str(self.current_frame)
+                                )
+                    self.trackers[i].df.append([self.current_frame,-1,-1])
+
+        print("Starting to export....")
+        #once done processing the video (last frame complete), export to file
+        for i in range(len(self.trackers)):
+            print("Exporting: " + self.trackers[i].s_id)
+            #load our data into a pandas dataframe
+            self.trackers[i].df = pd.DataFrame(np.matrix(self.trackers[i].df), columns = ['frame','pos_x','pos_y'])
+            #export the data into a csv file
+            self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].s_id + ".csv")
+
+
     def run(self):
         while(true):
             update()
 
     def set_frame(self, value):
-        self.vid.set(cv2.CAP_PROP_POS_FRAMES,value)
-
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES,value)
 
 
     def get_frame(self,tracking = 0):
@@ -47,11 +99,11 @@ class VideoCapture:
         Description: get frame gets the tracking number, and depending on the
         tracking, we determine what to track (-2: NONE, -1 ALL, 1...n tracking index)
         """
-        if self.vid.isOpened():
+        if self.cap.isOpened():
             #grab a frame
-            ret, frame = self.vid.read()
+            ret, frame = self.cap.read()
             #set the current frame number to the frame we just received
-            self.current_frame = self.vid.get(cv2.CAP_PROP_POS_FRAMES)
+            self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             if tracking == self.NO_TRACKING:
                 return (ret,frame)
             elif tracking == self.TRACK_ALL:
@@ -67,7 +119,7 @@ class VideoCapture:
         Description: This function returns a frame centered and zoomed in on the
         individual being tracked.
         """
-        if self.vid.isOpened():
+        if self.cap.isOpened():
             # Apply mask to aarea of interest\n",
             ret,frame = self.process(self.trackers[individual],frame,self.current_frame)
             if ret is True:
@@ -105,10 +157,8 @@ class VideoCapture:
         This function takes a frame, and a tracked individua and performs operations
         on the frame and applies information to the tracktor like x,y coordinates
         """
-        #preprocess the frames, adding a threshold, erode and dialing to
-
-        #eliminate small noise
         try:
+            #eliminate small noise
             thresh = tracktor.colour_to_thresh(frame)
             thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
             thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
@@ -126,13 +176,9 @@ class VideoCapture:
             ret = False
             return ret,frame
 
-        # Display the resulting frame
-
         return (True,final)
 
     def add_tracker(self):
-        """
-        """
         self.trackers.append(tracktor())
 
     def delete_tracker(self,index):
@@ -148,5 +194,5 @@ class VideoCapture:
 
     # Release the video source when the object is destroyed
     def __del__(self):
-        if self.vid.isOpened():
-            self.vid.release()
+        if self.cap.isOpened():
+            self.cap.release()

@@ -8,7 +8,7 @@ from tracktor_ui.dialog import Dialog
 
 import PIL.Image, PIL.ImageTk
 import math
-import pandas as pd
+
 import numpy.matrixlib as np
 import time
 import cv2
@@ -22,8 +22,6 @@ class App:
         self.window = window
         self.window.title(window_title)
 
-        self.output_path = "../output/"
-
         self.window_width = 1080
         self.window_height = 720
         self.number_of_trackers = 1
@@ -35,6 +33,11 @@ class App:
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
 
+
+        #set min window size to the videocapture size
+        self.load_file()
+
+
         self.file_menu = tkinter.Menu(self.menu, tearoff = 0)
         self.menu.add_cascade(label = "File", menu = self.file_menu)
 
@@ -42,7 +45,7 @@ class App:
         self.file_menu.add_command(label="Open", command=self.load_file)
         self.file_menu.add_command(label="Save", command=self.donothing)
         self.file_menu.add_command(label="Save as...", command=self.donothing)
-        self.file_menu.add_command(label="Export All", command=self.export_all)
+        self.file_menu.add_command(label="Export All", command=self.vid.export_all)
         self.file_menu.add_command(label="Close", command=self.donothing)
 
         self.edit_menu = tkinter.Menu(self.menu, tearoff = 0)
@@ -56,9 +59,6 @@ class App:
 
         self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
         self.pause.grid(row = 2,column = 1,sticky = "W")
-
-        #set min window size to the videocapture size
-        self.load_file()
 
 
 
@@ -102,7 +102,6 @@ class App:
         self.mainframe.columnconfigure(5, weight = 1)
         self.mainframe.rowconfigure(5, weight = 1)
 
-
         # Create a Tkinter variable
         self.tkvar = tkinter.StringVar(self.window)
 
@@ -112,6 +111,7 @@ class App:
         #add trackers to set number
         for i in range(self.number_of_trackers):
             self.create_tracker()
+
         #setup the menu
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         tkinter.Label(self.mainframe, text="Tracked Individual").grid(row = 1, column = 1)
@@ -119,7 +119,7 @@ class App:
 
         offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset",
                                 self.working_number,
-                                min= 1, max= 100,
+                                min= 5, max= 100,
                                 row= 4, column= 2
                                 )
 
@@ -145,14 +145,14 @@ class App:
         self.tkvar.trace(change_dropdown)
 
     def update(self):
-        self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
+        self.vid.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
         # Get a frame from the video source
         self.frame_label.config(text = "Frame:"+str(int(self.vid.current_frame)))
 
         #check if we are not the last frame, if we are, stop
         if self.vid.current_frame < self.vid.length:
             #track individual
-            ret, frame = self.vid.get_frame(self.working_number)
+            ret, frame = self.vid.get_frame(self.vid.working_number)
             frame = cv2.resize(frame,(int(1080),(int(720))),cv2.INTER_CUBIC)
 
             #update framenumber
@@ -235,15 +235,13 @@ class App:
 
         print(file)
         if file != '':
-            try:
-                del self.vid
-            except: pass
-            self.play_state = False
             self.vid = VideoCapture(file)
+            self.play_state = False
+            self.vid.play_state = False
             self.canvas = self.setup_canvas()
             self.setup_video_functions()
             self.update()
-
+    """
     def export_all(self):
         #self.set_frame_pos(1)
         #print("setting fame to start:" + str(self.vid.current_frame))
@@ -294,6 +292,6 @@ class App:
             self.vid.trackers[i].df = pd.DataFrame(np.matrix(self.vid.trackers[i].df), columns = ['frame','pos_x','pos_y'])
             #export the data into a csv file
             self.vid.trackers[i].df.to_csv(self.output_path + "csv/" + self.vid.trackers[i].s_id + ".csv")
-
+    """
     def donothing(self):
         pass
