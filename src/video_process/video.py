@@ -71,8 +71,8 @@ class VideoCapture:
                                                 ])
                 #we received bad data and cannot process it. return -1
                 except:
-                    print("Could not get location from" + self.trackers[i].s_id +
-                                "at frame " + str(self.current_frame)
+                    print("Could not get location from " + self.trackers[i].s_id +
+                                " at frame " + str(self.current_frame)
                                 )
                     self.trackers[i].df.append([self.current_frame,-1,-1])
 

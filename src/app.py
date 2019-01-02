@@ -67,7 +67,7 @@ class App:
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
         # After it is called once, the update method will be automatically called every delay milliseconds
-        self.delay = 1
+        self.delay = 15
         #loads file and sets up canvases from the new file
 
         self.window.mainloop()
@@ -241,57 +241,6 @@ class App:
             self.canvas = self.setup_canvas()
             self.setup_video_functions()
             self.update()
-    """
-    def export_all(self):
-        #self.set_frame_pos(1)
-        #print("setting fame to start:" + str(self.vid.current_frame))
-        #sets the process to process ALL
-        self.working_number = self.vid.find_tracker_index_by_id("ALL")
-        ret = True
 
-        for i in range(len(self.vid.trackers)):
-            self.vid.trackers[i].df = []
-
-        while(self.vid.current_frame <= self.vid.length):
-
-            # Get a frame from the video source, already processed
-            ret, frame = self.vid.get_frame(self.working_number)
-            print("loading: " + str(int(self.vid.current_frame)) + " of "+ str(int(self.vid.length)))
-
-            #frame already processed, retreive data from that frame, store it in each trackers
-            for i in range(len(self.vid.trackers)):
-                #ignore duplicate frame
-                if len(self.vid.trackers[i].df) > 1:
-                    last_frame = self.vid.trackers[i].df[i-1][0]
-                #it is the first frame and we can simulate the previous_frame
-                else:
-                    last_frame = self.vid.current_frame-1
-
-                #try to append data
-                try:
-                    #if we have a new frame, append it
-                    if self.vid.current_frame != last_frame:
-                        self.vid.trackers[i].df.append([self.vid.current_frame,
-                                                self.vid.trackers[i].meas_now[0][0], #store X coord
-                                                self.vid.trackers[i].meas_now[0][1] #store Y coord
-                                                ]
-                                                )
-                #we received bad data and cannot process it. return -1
-                except:
-                    print("Could not get location from" + self.vid.trackers[i].s_id +
-                                "at frame " + str(self.vid.current_frame)
-                                )
-                    self.vid.trackers[i].df.append([self.vid.current_frame,-1,-1])
-
-
-        print("Starting to export....")
-        #once done processing the video (last frame complete), export to file
-        for i in range(len(self.vid.trackers)):
-            print("Exporting: " + self.vid.trackers[i].s_id)
-            #load our data into a pandas dataframe
-            self.vid.trackers[i].df = pd.DataFrame(np.matrix(self.vid.trackers[i].df), columns = ['frame','pos_x','pos_y'])
-            #export the data into a csv file
-            self.vid.trackers[i].df.to_csv(self.output_path + "csv/" + self.vid.trackers[i].s_id + ".csv")
-    """
     def donothing(self):
         pass
