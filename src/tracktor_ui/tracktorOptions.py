@@ -24,16 +24,18 @@ class data_bar:
         self.max = max
         self.scale = tkinter.ttk.Scale(from_= min, to = max,command = self.set)
         self.scale.config (length = 480)
-        #self.scale.config(length = root.winfo_width())
-
         self.scale.grid(row = row, column = column,sticky = "W")
+
         self.scale_name = tkinter.ttk.Label(text = name)
         self.scale_name.grid(row = row, column = column - 1, sticky = "E")
 
+        self.scale_data = tkinter.ttk.Label()
+        self.scale_data.grid(row = row, column = column)
+
+        self.update()
 
 
     def set(self, value):
-        print (self.vid.working_number)
         #check the name if we are tracking a new individual, if so set our object
         if self.object.s_id != self.vid.trackers[self.vid.working_number].s_id:
 
@@ -42,6 +44,7 @@ class data_bar:
 
         #floor the value to suit the numbers being used
         value = floor(float(value))
+
         if self.name == "Offset":
             self.object.offset = value
             print("Offset:"+str(value))
@@ -56,20 +59,22 @@ class data_bar:
         elif self.name == "MaxArea":
             self.object.max_area = value
             print("MaxArea:"+str(value))
+        #display it's value
+        self.scale_data.config(text = value)
         #if self.vid.play_state is False:
         #    set_frame_pos(-1)
 
     def get(self):
         if self.name == "Offset":
-            self.value = object.offset
+            value = self.object.offset
         elif self.name == "Blocksize":
-            self.value = object.block_size
+            value = self.object.block_size
         elif self.name == "MinArea":
-            self.value = object.min_area
+            value = self.object.min_area
         elif self.name == "MaxArea":
-            self.value = object.max_area
-        return self.value
+            return self.object.max_area
+        return value
 
-    def update(self,video):
-        #video.current_frame-1
-        pass
+    def update(self):
+        self.scale.set(value=self.get())
+        self.scale_data.config(text = self.get())
