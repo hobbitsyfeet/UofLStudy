@@ -82,8 +82,8 @@ class App:
     def setup_video_functions(self):
 
         #For choosing current frame
-        self.frame_label = ttk.Label( text = "frame:", font = ('Helvetica', '16') )
-        self.frame_label.grid(row=3,column = 6, sticky = "NW")
+        self.frame_label = ttk.Label( text = "frame:")
+        self.frame_label.grid(row=3,column = 2, sticky = "W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
@@ -120,23 +120,23 @@ class App:
         offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset",
                                 self.working_number,
                                 min= 5, max= 100,
-                                row= 4, column= 2
+                                row= 4, column= 1
                                 )
 
         block_size_bar = tracktorOptions.data_bar(self.window, self.vid, "Blocksize",
                                 self.working_number,
                                 min= 1, max= 100,
-                                row= 5, column= 2
+                                row= 5, column= 1
                                 )
         min_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MinArea",
                                 self.working_number,
                                 min= 1, max= 5000,
-                                row= 6, column= 2
+                                row= 6, column= 1
                                 )
         max_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MaxArea",
                                 self.working_number,
                                 min= 1, max= 5000,
-                                row= 7, column= 2
+                                row= 7, column= 1
                                 )
     # on change dropdown value
     def change_dropdown(*args):
