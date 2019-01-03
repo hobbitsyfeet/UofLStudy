@@ -5,12 +5,14 @@ import sys
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
-from random import randrange
+import random
+#from random import randrange,seed
+from time import time
 
 class tracktor():
     def __init__(self,
         s_id ="NO_ID",
-        colour = (randrange(0,255,1),randrange(0,255,1),randrange(0,255,1)),
+        colour = None,
         block_size = 51, offset = 20,
         min_area = 100, max_area = 5000,
         scaling = 1.0
@@ -25,6 +27,9 @@ class tracktor():
         #where each tracktor takes care of one individual, we do not need this.
         #self.n_inds = n_inds
         self.s_id = s_id
+        if colour is None:
+            random.seed(time())
+            colour = (random.randrange(0,255,1),random.randrange(0,255,1),random.randrange(0,255,1))
         self.colour = colour
 
         # this is the block_size and offset used for adaptive thresholding (block_size should always be odd)

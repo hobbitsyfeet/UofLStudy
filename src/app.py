@@ -208,6 +208,7 @@ class App:
 
 
         print ("one clicked at", pos_x, pos_y)
+        self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
         self.vid.trackers[self.working_number].clicked = (pos_x, pos_y)
         self.update()
         return event.x, event.y
