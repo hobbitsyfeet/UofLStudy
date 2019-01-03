@@ -40,7 +40,9 @@ class tracktor():
         # in this case, the range is wide because males vastly smaller than females
         self.min_area = min_area
         self.max_area = max_area
+        self.area = 0
 
+        self.clicked = (-1,-1)
         # the scaling parameter can be used to speed up tracking if video resolution is too high (use value 0-1)
         self.scaling = scaling
 
@@ -139,10 +141,22 @@ class tracktor():
         #del self.meas_now[:]
         #assigning to empty doesn't crash, less efficient but a size of 2 wont make a difference
         self.meas_now = []
+
         while i < len(contours):
+
+            #if we clicked this frame
+            if self.clicked != (-1,-1):
+                #check if the position we clicked is inside of the contour
+                dist = cv2.pointPolygonTest(contours[i], self.clicked, False)
+                #if it is not (-1 if not, 1 if it is) we delete the contour
+                if dist == -1.0:
+                    del contours[i]
+                    continue
+
             area = cv2.contourArea(contours[i])
             if area < self.min_area or area > self.max_area:
                 del contours[i]
+
             else:
                 cv2.drawContours(final, contours, i, (0,0,255), 1)
                 M = cv2.moments(contours[i])
@@ -152,8 +166,10 @@ class tracktor():
                 else:
                 	cx = 0
                 	cy = 0
+
                 self.meas_now.append([cx,cy])
                 i += 1
+        self.clicked = (-1,-1)
         return final, contours
 
     def apply_k_means(self,contours):
@@ -222,7 +238,7 @@ class tracktor():
         self.meas_last = np.array(self.meas_last)
         self.meas_now = np.array(self.meas_now)
         if self.meas_now.shape !=self.meas_last.shape:
-            if self.meas_now.shape[0] <self.meas_last.shape[0]:
+            if self.meas_now.shape[0] < self.meas_last.shape[0]:
                 while self.meas_now.shape[0] !=self.meas_last.shape[0]:
                    self.meas_last = np.delete(self.meas_last,self.meas_last.shape[0]-1, 0)
             else:
@@ -283,7 +299,7 @@ class tracktor():
             cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 5, self.colour, -1, cv2.LINE_AA)
 
 
-            #circle for min_area (A = pi*r^2) => r = sqrt(A/pi)
+            #circle for area (A = pi*r^2) => r = sqrt(A/pi)
             min_radius = int(np.sqrt(self.min_area/np.pi))
             cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255,255,255), 1, cv2.LINE_AA)
 

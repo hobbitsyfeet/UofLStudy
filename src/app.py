@@ -86,15 +86,15 @@ class App:
         self.frame_label.grid(row=3,column = 2, sticky = "W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
-        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 4,command = self.set_frame_pos)
+        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 1,command = self.set_frame_pos)
         self.frame_bar.config(length = self.window_width)
         self.frame_bar.grid(row=3,column = 1)
 
-        #self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
-        #self.nudge_left.grid(row = 2,column = 1,sticky = "E")
+        self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
+        self.nudge_left.grid(row = 3,column = 0,sticky = "E")
 
-        #self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame,width = 2)
-        #self.nudge_left.grid(row = 2,column = 3,sticky = "W")
+        self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame, width = 2)
+        self.nudge_left.grid(row = 3,column = 3,sticky = "W")
 
         # Add a grid for dropdown
         self.mainframe = tkinter.Frame(self.window)
@@ -170,7 +170,7 @@ class App:
                 self.set_frame_bar()
 
     def play(self):
-        if self.play_state is not True:
+        if self.play_state is False:
             self.play_state = True
             self.update()
 
@@ -181,21 +181,35 @@ class App:
             self.play_state = False
             self.update()
 
-    #NOTE current_frame - 7 just works idk why....
     def previous_frame(self):
-        self.set_frame_pos(self.vid.current_frame-7)
-        self.set_frame_bar()
+        self.set_frame_pos(self.vid.current_frame-3)
         self.update()
+        self.set_frame_bar()
 
-    #NOTE current_frame - 5 just works idk why....
     def next_frame(self):
-        self.set_frame_pos(self.vid.current_frame-5)
-        self.set_frame_bar()
         self.update()
+        self.set_frame_bar()
 
 
     def callback1(self,event):
-        print ("one clicked at", event.x, event.y)
+        if self.play_state is True:
+            print("Pausing")
+            self.play_state = False
+        self.set_frame_pos(self.vid.current_frame-2)
+
+        #ratio is calculated between incomming frame to the output
+        ratio_x = self.vid.width / self.window_width
+        ratio_y = self.vid.height / self.window_height
+        print("ratio X " +str(ratio_x) )
+        print("ratio X " +str(ratio_y) )
+
+        pos_x = round(event.x * ratio_x)
+        pos_y = round(event.y * ratio_y)
+
+
+        print ("one clicked at", pos_x, pos_y)
+        self.vid.trackers[self.working_number].clicked = (pos_x, pos_y)
+        self.update()
         return event.x, event.y
 
     def set_frame_bar(self):

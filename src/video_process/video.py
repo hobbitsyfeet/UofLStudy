@@ -34,7 +34,7 @@ class VideoCapture:
         self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
-        self.zoom = 4
+        self.zoom = 1
 
     def export_all(self):
         #self.set_frame_pos(1)
