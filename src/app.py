@@ -22,8 +22,8 @@ class App:
         self.window = window
         self.window.title(window_title)
 
-        self.window_width = 1080
-        self.window_height = 720
+        self.window_width = 720
+        self.window_height = 480
         self.number_of_trackers = 1
 
         self.working_number = 0
@@ -82,8 +82,8 @@ class App:
     def setup_video_functions(self):
 
         #For choosing current frame
-        self.frame_label = ttk.Label( text = "frame:")
-        self.frame_label.grid(row=3,column = 2, sticky = "W")
+        self.frame_label = ttk.Label( text = "frame:", width = 5)
+        self.frame_label.grid(row=3,column = 2,padx = 10 , sticky = "W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 1,command = self.set_frame_pos)
@@ -153,7 +153,7 @@ class App:
         if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(self.vid.working_number)
-            frame = cv2.resize(frame,(int(1080),(int(720))),cv2.INTER_CUBIC)
+            frame = cv2.resize(frame,(self.window_width, self.window_height),cv2.INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text ="Frame:" + str(int(self.vid.current_frame)))
@@ -248,8 +248,10 @@ class App:
         dlg = fileDialog.Open()
         file = dlg.show()
 
+
         print(file)
         if file != '':
+            dlg.destroy()
             self.vid = VideoCapture(file)
             self.play_state = False
             self.vid.play_state = False
