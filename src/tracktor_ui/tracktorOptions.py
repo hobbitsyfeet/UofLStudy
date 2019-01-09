@@ -30,7 +30,7 @@ class data_bar:
         self.scale_name.grid(row = row, column = column - 1, sticky = "E")
 
         self.scale_data = tkinter.ttk.Label()
-        self.scale_data.grid(row = row, column = column)
+        self.scale_data.grid(row = row, column = column+1, sticky = "E")
 
         self.update()
 

@@ -76,31 +76,31 @@ class App:
         # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
         canvas = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height , cursor = "crosshair")
         canvas.bind("<Button-1>", self.callback1)
-        canvas.grid(column = 0, columnspan = 6,row=1,ipady = 1)
+        canvas.grid(column = 0, columnspan = 5,row=1,ipady = 1)
         return canvas
 
     def setup_video_functions(self):
 
         #For choosing current frame
-        self.frame_label = ttk.Label( text = "frame:", width = 5)
-        self.frame_label.grid(row=3,column = 2,padx = 10 , sticky = "W")
+        self.frame_label = ttk.Label( text = "frame:", width = 15)
+        self.frame_label.grid(row=3,column = 6, sticky = "W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 1,command = self.set_frame_pos)
         self.frame_bar.config(length = self.window_width)
-        self.frame_bar.grid(row=3,column = 1)
+        self.frame_bar.grid(row=3,column = 1, columnspan = 3)
 
         self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
         self.nudge_left.grid(row = 3,column = 0,sticky = "E")
 
         self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame, width = 2)
-        self.nudge_left.grid(row = 3,column = 3,sticky = "W")
+        self.nudge_left.grid(row = 3,column = 5,sticky = "W")
 
         # Add a grid for dropdown
         self.mainframe = tkinter.Frame(self.window)
         self.mainframe.grid(row=0,column=0, sticky="NW" )
-        self.mainframe.columnconfigure(5, weight = 1)
-        self.mainframe.rowconfigure(5, weight = 1)
+        self.mainframe.columnconfigure(5)
+        self.mainframe.rowconfigure(5)
 
         # Create a Tkinter variable
         self.tkvar = tkinter.StringVar(self.window)
@@ -114,8 +114,8 @@ class App:
 
         #setup the menu
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        tkinter.Label(self.mainframe, text="Tracked Individual").grid(row = 1, column = 1)
-        self.popupMenu.grid(row = 2, column =1)
+        tkinter.Label(self.mainframe, text="Tracked Individual").grid(row = 0, column = 0)
+        self.popupMenu.grid(row = 1, column =0)
 
         offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset",
                                 self.working_number,
@@ -201,7 +201,7 @@ class App:
         ratio_x = self.vid.width / self.window_width
         ratio_y = self.vid.height / self.window_height
         print("ratio X " +str(ratio_x) )
-        print("ratio X " +str(ratio_y) )
+        print("ratio Y " +str(ratio_y) )
 
         pos_x = round(event.x * ratio_x)
         pos_y = round(event.y * ratio_y)
@@ -227,7 +227,7 @@ class App:
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        self.popupMenu.grid(row = 2, column =1)
+        #self.popupMenu.grid(row = 2, column =1)
 
 
 
