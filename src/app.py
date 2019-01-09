@@ -251,7 +251,6 @@ class App:
 
         print(file)
         if file != '':
-            dlg.destroy()
             self.vid = VideoCapture(file)
             self.play_state = False
             self.vid.play_state = False
