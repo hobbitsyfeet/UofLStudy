@@ -14,6 +14,10 @@ class VideoCapture:
         if not self.cap.isOpened():
             raise ValueError("Unable to open video source", video_source)
 
+        #print(cv2.getBuildInformation())
+        #print(cv2.ocl.haveOpenCL())
+        #cv2.ocl.setUseOpenCL(True)
+
         self.cap.set(cv2.CAP_PROP_FPS, 60)
         # Get video source width, height and length in frames
         self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -34,7 +38,7 @@ class VideoCapture:
         self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
-        self.zoom = 1
+        self.zoom = 4
 
     def export_all(self):
         #self.set_frame_pos(1)
@@ -99,8 +103,14 @@ class VideoCapture:
         tracking, we determine what to track (-2: NONE, -1 ALL, 1...n tracking index)
         """
         if self.cap.isOpened():
-            #grab a frame
-            ret, frame = self.cap.read()
+
+            #initialize ret to false so we enter the while loop
+            ret = False
+            #if we cannot retreive the frame, continue onto the next one
+            while ret is False:
+                #grab a frame
+                ret, frame = self.cap.read()
+
             #set the current frame number to the frame we just received
             self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             if tracking == self.NO_TRACKING:
@@ -143,10 +153,14 @@ class VideoCapture:
         """
         #iterate through all
         for i in range(len(self.trackers)):
-            ret,frame = self.process(self.trackers[i],frame,self.current_frame,detail = False)
+            ret,final = self.process(self.trackers[i],frame,self.current_frame,detail = False)
+
             if ret is True:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
-        return frame
+        if ret:
+            return final
+        else:
+            return frame
 
     def initVideo(self):
         return ret,frame
