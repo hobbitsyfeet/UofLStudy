@@ -227,7 +227,7 @@ class App:
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        #self.popupMenu.grid(row = 2, column =1)
+        self.popupMenu.grid(row = 1, column =0)
 
 
 

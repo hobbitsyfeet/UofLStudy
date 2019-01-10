@@ -85,7 +85,6 @@ class VideoCapture:
             #export the data into a csv file
             self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].s_id + ".csv")
 
-
     def run(self):
         while(true):
             update()
@@ -163,14 +162,44 @@ class VideoCapture:
             thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
             thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
 
+            #x,y coordinates of previous tracktor
+            if len(tracktor.meas_now) > 0:
+                pos_x = tracktor.meas_now[0][0]
+                pos_y = tracktor.meas_now[0][1]
+            else:
+                print("Unable to track " + tracktor.s_id)
 
             #from our current frame, draw contours and display it on final frame
             final, contours = tracktor.detect_and_draw_contours(frame, thresh)
-            #calculate cost of previous to currentmouse_video
+
+            #assign default flag to True (assume changed until proven not)
+            changed_tracker_flag = True
+
+            #TODO
+            #as long as changed_tracker_flag is false, we adjust values to correct
+            #while changed_tracker_flag is True:
+
+            if len(contours) > 0:
+                #we look at all the contours
+                for contour in contours:
+                    #check if previous position exists in updated contour (1= Yes, -1= No)
+                    dist = cv2.pointPolygonTest(contour,(pos_x,pos_y) , False)
+
+                    #if previous point exists in the same contour, set changed flag to false
+                    if dist != -1.0:
+                        changed_tracker_flag = False
+
+                if changed_tracker_flag is True:
+                    print(tracktor.s_id + " Has changed contours")
+                # if no contours exist, we cannot process anything, return unprocessed frame
+            else:
+                print("Unable to track " + tracktor.s_id)
+
             row_ind, col_ind = tracktor.hungarian_algorithm()
 
             #try to re-draw, separate try-except block allows redraw of min_area/max_area
             final = tracktor.reorder_and_draw(final, col_ind, this)
+
             ret = True
         except:
             ret = False
