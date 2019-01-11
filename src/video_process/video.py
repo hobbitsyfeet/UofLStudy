@@ -28,74 +28,37 @@ class VideoCapture:
         self.last_frame = self.current_frame
         self.play_state = False
 
+        #will be updated by changing tracktor data
+        self.data_changed = 0
+
         self.working_number = 0
         self.trackers = []
 
         self.output_path = "../output/"
-        #tracking constants for getting frame types
 
+        #tracking constants for getting frame types
         self.TRACK_ALL = -1
         self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
         self.zoom = 4
 
-    def export_all(self):
-        #self.set_frame_pos(1)
-        #print("setting fame to start:" + str(self.current_frame))
-        #sets the process to process ALL
-        self.working_number = self.find_tracker_index_by_id("ALL")
-        ret = True
-
-        for i in range(len(self.trackers)):
-            self.trackers[i].df = []
-
-        while(self.current_frame <= self.length):
-
-            # Get a frame from the video source, already processed
-            ret, frame = self.get_frame(self.working_number)
-            print("loading: " + str(int(self.current_frame)) + " of "+ str(int(self.length)))
-
-            #frame already processed, retreive data from that frame, store it in each trackers
-            for i in range(len(self.trackers)):
-                #ignore duplicate frame
-                if len(self.trackers[i].df) > 1:
-                    last_frame = self.trackers[i].df[i-1][0]
-                #it is the first frame and we can simulate the previous_frame
-                else:
-                    last_frame = self.current_frame-1
-
-                #try to append data
-                try:
-                    #if we have a new frame, append it
-                    if self.current_frame != last_frame:
-                        self.trackers[i].df.append([self.current_frame,
-                                                self.trackers[i].meas_now[0][0], #store X coord
-                                                self.trackers[i].meas_now[0][1] #store Y coord
-                                                ])
-                #we received bad data and cannot process it. return -1
-                except:
-                    print("Could not get location from " + self.trackers[i].s_id +
-                                " at frame " + str(self.current_frame)
-                                )
-                    self.trackers[i].df.append([self.current_frame,-1,-1])
-
-        print("Starting to export....")
-        #once done processing the video (last frame complete), export to file
-        for i in range(len(self.trackers)):
-            print("Exporting: " + self.trackers[i].s_id)
-            #load our data into a pandas dataframe
-            self.trackers[i].df = pd.DataFrame(np.matrix(self.trackers[i].df), columns = ['frame','pos_x','pos_y'])
-            #export the data into a csv file
-            self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].s_id + ".csv")
-
-    def run(self):
-        while(true):
-            update()
-
     def set_frame(self, value):
         self.cap.set(cv2.CAP_PROP_POS_FRAMES,value)
 
+    def add_tracker(self):
+        self.trackers.append(tracktor())
+
+    def delete_tracker(self,index):
+        del trackers[index]
+
+    #search the list of trackers by name and return -1 if not fouond
+    def find_tracker_index_by_id(self,name):
+        for i in range(len(self.trackers)):
+            if name == self.trackers[i].s_id:
+                return i
+        else:
+            return -1
 
     def get_frame(self,tracking = 0):
         """
@@ -162,9 +125,6 @@ class VideoCapture:
         else:
             return frame
 
-    def initVideo(self):
-        return ret,frame
-
     def process(self,tracktor,frame,this,detail=True):
         """
         This function takes a frame, and a tracked individua and performs operations
@@ -227,19 +187,54 @@ class VideoCapture:
             #print("Unable to track ")
             return changed_tracker_flag
 
-    def add_tracker(self):
-        self.trackers.append(tracktor())
+    def export_all(self):
+        #self.set_frame_pos(1)
+        #print("setting fame to start:" + str(self.current_frame))
+        #sets the process to process ALL
+        self.working_number = self.find_tracker_index_by_id("ALL")
+        ret = True
 
-    def delete_tracker(self,index):
-        del trackers[index]
-
-    #search the list of trackers by name and return -1 if not fouond
-    def find_tracker_index_by_id(self,name):
         for i in range(len(self.trackers)):
-            if name == self.trackers[i].s_id:
-                return i
-        else:
-            return -1
+            self.trackers[i].df = []
+
+        while(self.current_frame <= self.length):
+
+            # Get a frame from the video source, already processed
+            ret, frame = self.get_frame(self.working_number)
+            print("loading: " + str(int(self.current_frame)) + " of "+ str(int(self.length)))
+
+            #frame already processed, retreive data from that frame, store it in each trackers
+            for i in range(len(self.trackers)):
+                #ignore duplicate frame
+                if len(self.trackers[i].df) > 1:
+                    last_frame = self.trackers[i].df[i-1][0]
+                #it is the first frame and we can simulate the previous_frame
+                else:
+                    last_frame = self.current_frame-1
+
+                #try to append data
+                try:
+                    #if we have a new frame, append it
+                    if self.current_frame != last_frame:
+                        self.trackers[i].df.append([self.current_frame,
+                                                self.trackers[i].meas_now[0][0], #store X coord
+                                                self.trackers[i].meas_now[0][1] #store Y coord
+                                                ])
+                #we received bad data and cannot process it. return -1
+                except:
+                    print("Could not get location from " + self.trackers[i].s_id +
+                                " at frame " + str(self.current_frame)
+                                )
+                    self.trackers[i].df.append([self.current_frame,-1,-1])
+
+        print("Starting to export....")
+        #once done processing the video (last frame complete), export to file
+        for i in range(len(self.trackers)):
+            print("Exporting: " + self.trackers[i].s_id)
+            #load our data into a pandas dataframe
+            self.trackers[i].df = pd.DataFrame(np.matrix(self.trackers[i].df), columns = ['frame','pos_x','pos_y'])
+            #export the data into a csv file
+            self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].s_id + ".csv")
 
     # Release the video source when the object is destroyed
     def __del__(self):
