@@ -28,7 +28,7 @@ class App:
 
         self.working_number = 0
 
-        self.play_state = False
+        #self.vid.play_state = False
 
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
@@ -70,7 +70,19 @@ class App:
         self.delay = 15
         #loads file and sets up canvases from the new file
 
-        self.window.mainloop()
+        self.run_mainloop()
+        #self.window.mainloop()
+
+    def run_mainloop(self):
+        """
+        This is the mainloop that substitutes tkinter.mainloop, but takes into
+            consideration needing to update the frame as well.
+        """
+        while True:
+            if self.vid.data_changed and self.vid.play_state is False:
+                self.update()
+            self.window.update_idletasks()
+            self.window.update()
 
     def setup_canvas(self):
         # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
@@ -165,20 +177,20 @@ class App:
                 self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
                 #after a certain time, update to the next frame if play is true
-            if self.play_state is True:
+            if self.vid.play_state is True:
                 self.window.after(self.delay, self.update)
                 self.set_frame_bar()
 
     def play(self):
-        if self.play_state is False:
-            self.play_state = True
+        if self.vid.play_state is False:
+            self.vid.play_state = True
             self.update()
 
     def pause(self):
         #pause only if play is set
-        if self.play_state is True:
+        if self.vid.play_state is True:
             print("Pausing")
-            self.play_state = False
+            self.vid.play_state = False
             self.update()
 
     def previous_frame(self):
@@ -192,9 +204,9 @@ class App:
 
 
     def callback1(self,event):
-        if self.play_state is True:
+        if self.vid.play_state is True:
             print("Pausing")
-            self.play_state = False
+            self.vid.play_state = False
         self.set_frame_pos(self.vid.current_frame-2)
 
         #ratio is calculated between incomming frame to the output
@@ -234,7 +246,7 @@ class App:
     def set_frame_pos(self,value):
         self.vid.current_frame = math.floor(float(value))
         self.vid.set_frame(self.vid.current_frame)
-        if self.play_state is False:
+        if self.vid.play_state is False:
             self.update()
             #self.window.after(self.delay, )
 
@@ -252,8 +264,8 @@ class App:
         print(file)
         if file != '':
             self.vid = VideoCapture(file)
-            self.play_state = False
             self.vid.play_state = False
+            #self.vid.vid.play_state = False
             self.canvas = self.setup_canvas()
             self.setup_video_functions()
             self.update()

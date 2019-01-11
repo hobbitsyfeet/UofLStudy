@@ -60,6 +60,36 @@ class VideoCapture:
         else:
             return -1
 
+    def set_tracker_offset(self,value):
+        self.trackers[self.working_number].offset = value
+        self.data_changed = True
+        #go to the previous frame to update to current
+        if self.play_state is False:
+            self.set_frame(self.current_frame -1)
+
+    def set_tracker_blocksize(self,value):
+        if value % 2 == 0:
+            value += 1
+        self.trackers[self.working_number].block_size = value
+        self.data_changed = True
+        #go to the previous frame to update to current
+        if self.play_state is False:
+            self.set_frame(self.current_frame -1)
+
+    def set_tracker_minarea(self,value):
+        self.trackers[self.working_number].min_area = value
+        self.data_changed = True
+        #go to the previous frame to update to current
+        if self.play_state is False:
+            self.set_frame(self.current_frame -1)
+
+    def set_tracker_maxarea(self,value):
+        self.trackers[self.working_number].max_area = value
+        self.data_changed = True
+        #go to the previous frame to update to current
+        if self.play_state is False:
+            self.set_frame(self.current_frame -1)
+
     def get_frame(self,tracking = 0):
         """
         Description: get frame gets the tracking number, and depending on the
@@ -84,6 +114,8 @@ class VideoCapture:
             elif tracking != self.TRACK_ALL:
                 frame = self.get_focused_frame(frame,tracking)
         if ret:
+            #when we retreive a new frame, we can assume we updated values with it
+            self.data_changed = False
             return (ret,frame)
 
     def get_focused_frame(self,frame,individual):

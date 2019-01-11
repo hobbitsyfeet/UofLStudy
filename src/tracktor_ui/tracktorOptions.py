@@ -46,23 +46,19 @@ class data_bar:
         value = floor(float(value))
 
         if self.name == "Offset":
-            self.object.offset = value
+            self.vid.set_tracker_offset(value)
             print("Offset:"+str(value))
         elif self.name == "Blocksize":
-            if value % 2 == 0:
-                value += 1
-            self.object.block_size = value
+            self.vid.set_tracker_blocksize(value)
             print("Blocksize:"+str(value))
         elif self.name == "MinArea":
-            self.object.min_area = value
+            self.vid.set_tracker_minarea(value)
             print("MinArea:"+str(value))
         elif self.name == "MaxArea":
-            self.object.max_area = value
+            self.vid.set_tracker_maxarea(value)
             print("MaxArea:"+str(value))
         #display it's value
         self.scale_data.config(text = value)
-        #if self.vid.play_state is False:
-        #    set_frame_pos(-1)
 
     def get(self):
         if self.name == "Offset":
