@@ -186,28 +186,10 @@ class VideoCapture:
             #from our current frame, draw contours and display it on final frame
             final, contours = tracktor.detect_and_draw_contours(frame, thresh)
 
-            #assign default flag to True (assume changed until proven not)
-            changed_tracker_flag = True
-
-            #TODO
-            #as long as changed_tracker_flag is false, we adjust values to correct
-            #while changed_tracker_flag is True:
-
-            if len(contours) > 0:
-                #we look at all the contours
-                for contour in contours:
-                    #check if previous position exists in updated contour (1= Yes, -1= No)
-                    dist = cv2.pointPolygonTest(contour,(pos_x,pos_y) , False)
-
-                    #if previous point exists in the same contour, set changed flag to false
-                    if dist != -1.0:
-                        changed_tracker_flag = False
-
-                if changed_tracker_flag is True:
-                    print(tracktor.s_id + " Has changed contours")
-                # if no contours exist, we cannot process anything, return unprocessed frame
-            else:
-                print("Unable to track " + tracktor.s_id)
+            #detect if the tracker is changed
+            changed = self.tracker_changed(pos_x,pos_y,contours)
+            if changed is True:
+                print(tracktor.s_id + "has changed")
 
             row_ind, col_ind = tracktor.hungarian_algorithm()
 
@@ -220,6 +202,30 @@ class VideoCapture:
             return ret,frame
 
         return (True,final)
+
+    def tracker_changed(self, x, y, contours):
+        #assign default flag to True (assume changed until proven not)
+        changed_tracker_flag = True
+
+        #if there exist no contours, nothing is being tracked
+        if len(contours) > 0:
+            #we look at all the contours
+            for contour in contours:
+                #check if previous position exists in updated contour (1= Yes, -1= No)
+                dist = cv2.pointPolygonTest(contour,(x,y), False)
+                #print(dist)
+                #if previous point exists in the same contour, set changed flag to false
+                if dist != -1.0:
+                    changed_tracker_flag = False
+
+            if changed_tracker_flag is True:
+                #print("changed contours")
+                return changed_tracker_flag
+
+        # if no contours exist, we cannot process anything
+        else:
+            #print("Unable to track ")
+            return changed_tracker_flag
 
     def add_tracker(self):
         self.trackers.append(tracktor())
