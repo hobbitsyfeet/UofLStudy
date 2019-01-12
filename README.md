@@ -8,7 +8,7 @@ This will become a tool in which to use Tracktor to export data in a more intuit
 
     Uses python3 (currently developed for python 3.7+ but should work with other versions of python3).
     Tested on
-    Python3.7.2
+    Python 3.7.2
     Python 3.6.7
 
 After cloning the repository into a directory, decide whether you want to create a virtual environment (This is preferable). Instructions can be found here: 
