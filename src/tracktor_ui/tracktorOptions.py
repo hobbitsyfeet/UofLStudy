@@ -8,7 +8,6 @@ from math import floor
 
 class data_bar:
     def __init__(self, root, vid, name,
-                    working_number,
                     min, max,
                     row, column):
 
@@ -47,16 +46,12 @@ class data_bar:
 
         if self.name == "Offset":
             self.vid.set_tracker_offset(value)
-            print("Offset:"+str(value))
         elif self.name == "Blocksize":
             self.vid.set_tracker_blocksize(value)
-            print("Blocksize:"+str(value))
         elif self.name == "MinArea":
             self.vid.set_tracker_minarea(value)
-            print("MinArea:"+str(value))
         elif self.name == "MaxArea":
             self.vid.set_tracker_maxarea(value)
-            print("MaxArea:"+str(value))
         #display it's value
         self.scale_data.config(text = value)
 

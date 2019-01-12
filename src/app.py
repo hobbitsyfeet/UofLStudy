@@ -26,13 +26,8 @@ class App:
         self.window_height = 480
         self.number_of_trackers = 1
 
-        self.working_number = 0
-
-        #self.vid.play_state = False
-
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
-
 
         #set min window size to the videocapture size
         self.load_file()
@@ -57,8 +52,8 @@ class App:
         self.play = ttk.Button(self.window,text = "Play", command = self.play)
         self.play.grid(row = 2,column = 0,sticky = "E")
 
-        self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
-        self.pause.grid(row = 2,column = 1,sticky = "W")
+        self.pause_btn = ttk.Button(self.window,text = "Pause", command = self.pause)
+        self.pause_btn.grid(row = 2,column = 1,sticky = "W")
 
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
@@ -89,8 +84,8 @@ class App:
         self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
         self.nudge_left.grid(row = 3,column = 0,sticky = "E")
 
-        self.nudge_left = ttk.Button(self.window,text = ">", command = self.next_frame, width = 2)
-        self.nudge_left.grid(row = 3,column = 5,sticky = "W")
+        self.nudge_right = ttk.Button(self.window,text = ">", command = self.next_frame, width = 2)
+        self.nudge_right.grid(row = 3,column = 5,sticky = "W")
 
         # Add a grid for dropdown
         self.mainframe = tkinter.Frame(self.window)
@@ -114,23 +109,19 @@ class App:
         self.popupMenu.grid(row = 1, column =0)
 
         offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset",
-                                self.working_number,
                                 min= 5, max= 100,
                                 row= 4, column= 1
                                 )
 
         block_size_bar = tracktorOptions.data_bar(self.window, self.vid, "Blocksize",
-                                self.working_number,
                                 min= 1, max= 100,
                                 row= 5, column= 1
                                 )
         min_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MinArea",
-                                self.working_number,
                                 min= 1, max= 5000,
                                 row= 6, column= 1
                                 )
         max_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MaxArea",
-                                self.working_number,
                                 min= 1, max= 5000,
                                 row= 7, column= 1
                                 )
@@ -160,10 +151,10 @@ class App:
                 self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
-                #after a certain time, update to the next frame if play is true
-            #if self.vid.play_state is True:
+        #after a certain time, update to the next frame if play is true
+        self.set_frame_bar()
         self.window.after(self.delay, self.update)
-        #self.set_frame_bar()
+
 
     def play(self):
         if self.vid.play_state is False:
@@ -176,31 +167,27 @@ class App:
             self.vid.play_state = False
 
     def previous_frame(self):
-        self.set_frame_pos(self.vid.current_frame-3)
+        self.set_frame_pos(self.vid.current_frame-1)
         self.set_frame_bar()
 
     def next_frame(self):
+        self.set_frame_pos(self.vid.current_frame+1)
         self.set_frame_bar()
 
 
     def callback1(self,event):
-        if self.vid.play_state is True:
-            print("Pausing")
-            self.vid.play_state = False
+        self.pause()
 
         #ratio is calculated between incomming frame to the output
         ratio_x = self.vid.width / self.window_width
         ratio_y = self.vid.height / self.window_height
-        print("ratio X " +str(ratio_x) )
-        print("ratio Y " +str(ratio_y) )
 
+        #calculate the position to the ratio
         pos_x = round(event.x * ratio_x)
         pos_y = round(event.y * ratio_y)
 
-
-        print ("one clicked at", pos_x, pos_y)
-        self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
-        self.vid.trackers[self.working_number].clicked = (pos_x, pos_y)
+        #self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
+        self.vid.trackers[self.vid.working_number].clicked = (pos_x, pos_y)
         return event.x, event.y
 
     def set_frame_bar(self):
@@ -218,8 +205,6 @@ class App:
         self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         self.popupMenu.grid(row = 1, column =0)
-
-
 
     def set_frame_pos(self,value):
         self.vid.current_frame = math.floor(float(value))

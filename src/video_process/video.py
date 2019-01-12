@@ -18,11 +18,13 @@ class VideoCapture:
         #print(cv2.ocl.haveOpenCL())
         #cv2.ocl.setUseOpenCL(True)
 
-        self.cap.set(cv2.CAP_PROP_FPS, 60)
         # Get video source width, height and length in frames
         self.width = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.height = self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        self.length = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)-4
+        self.length = self.cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.FPS = 60
+        self.cap.set(cv2.CAP_PROP_FPS, self.FPS)
+
 
         self.current_frame = 0
         self.last_frame = self.current_frame
@@ -220,12 +222,16 @@ class VideoCapture:
         #sets the process to process ALL
         self.working_number = self.find_tracker_index_by_id("ALL")
         ret = True
+        #we want to process as fast as we can(1000 fps should be good)
+        self.cap.set(cv2.CAP_PROP_FPS, 1000)
+        #we want playstate to be true so get_frame will work
+        self.play_state = True
 
+        #reset all tracktor's data
         for i in range(len(self.trackers)):
             self.trackers[i].df = []
 
-        while(self.current_frame <= self.length):
-
+        while(self.current_frame < self.length):
             # Get a frame from the video source, already processed
             ret, frame = self.get_frame(self.working_number)
             print("loading: " + str(int(self.current_frame)) + " of "+ str(int(self.length)))
@@ -254,6 +260,7 @@ class VideoCapture:
                                 )
                     self.trackers[i].df.append([self.current_frame,-1,-1])
 
+        self.cap.set(cv2.CAP_PROP_FPS, self.FPS)
         print("Starting to export....")
         #once done processing the video (last frame complete), export to file
         for i in range(len(self.trackers)):
