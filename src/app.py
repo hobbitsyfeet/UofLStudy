@@ -60,29 +60,13 @@ class App:
         self.pause = ttk.Button(self.window,text = "Pause", command = self.pause)
         self.pause.grid(row = 2,column = 1,sticky = "W")
 
-
-
-        #self.vid.TRACK_ALL = -1
-
         #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
-        #loads file and sets up canvases from the new file
 
-        self.run_mainloop()
-        #self.window.mainloop()
-
-    def run_mainloop(self):
-        """
-        This is the mainloop that substitutes tkinter.mainloop, but takes into
-            consideration needing to update the frame as well.
-        """
-        while True:
-            if self.vid.data_changed and self.vid.play_state is False:
-                self.update()
-            self.window.update_idletasks()
-            self.window.update()
+        self.update()
+        self.window.mainloop()
 
     def setup_canvas(self):
         # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
@@ -170,36 +154,32 @@ class App:
             #update framenumber
             self.frame_label.config(text ="Frame:" + str(int(self.vid.current_frame)))
 
-                #if the return for a frame is true
+            #if the return for a frame is true
             if ret:
                 #set the canvas to the frame image
                 self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
                 #after a certain time, update to the next frame if play is true
-            if self.vid.play_state is True:
-                self.window.after(self.delay, self.update)
-                self.set_frame_bar()
+            #if self.vid.play_state is True:
+        self.window.after(self.delay, self.update)
+        #self.set_frame_bar()
 
     def play(self):
         if self.vid.play_state is False:
             self.vid.play_state = True
-            self.update()
 
     def pause(self):
         #pause only if play is set
         if self.vid.play_state is True:
             print("Pausing")
             self.vid.play_state = False
-            self.update()
 
     def previous_frame(self):
         self.set_frame_pos(self.vid.current_frame-3)
-        self.update()
         self.set_frame_bar()
 
     def next_frame(self):
-        self.update()
         self.set_frame_bar()
 
 
@@ -207,7 +187,6 @@ class App:
         if self.vid.play_state is True:
             print("Pausing")
             self.vid.play_state = False
-        self.set_frame_pos(self.vid.current_frame-2)
 
         #ratio is calculated between incomming frame to the output
         ratio_x = self.vid.width / self.window_width
@@ -222,7 +201,6 @@ class App:
         print ("one clicked at", pos_x, pos_y)
         self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
         self.vid.trackers[self.working_number].clicked = (pos_x, pos_y)
-        self.update()
         return event.x, event.y
 
     def set_frame_bar(self):
@@ -246,9 +224,7 @@ class App:
     def set_frame_pos(self,value):
         self.vid.current_frame = math.floor(float(value))
         self.vid.set_frame(self.vid.current_frame)
-        if self.vid.play_state is False:
-            self.update()
-            #self.window.after(self.delay, )
+
 
     def save_profile(self):
         pass
@@ -268,7 +244,6 @@ class App:
             #self.vid.vid.play_state = False
             self.canvas = self.setup_canvas()
             self.setup_video_functions()
-            self.update()
 
     def donothing(self):
         pass
