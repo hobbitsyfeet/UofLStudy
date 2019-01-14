@@ -42,8 +42,27 @@ class VideoCapture:
         #zoom variable for setting focused frame
         self.zoom = 4
 
+
+    def play(self):
+        if self.play_state is False:
+            self.play_state = True
+
+    def pause(self):
+        #pause only if play is set
+        if self.play_state is True:
+            print("Pausing")
+            self.play_state = False
+
     def set_frame(self, value):
+        value = floor(float(value))
+        self.current_frame = value
         self.cap.set(cv2.CAP_PROP_POS_FRAMES,value)
+
+    def previous_frame(self):
+        self.set_frame(self.current_frame-1)
+
+    def next_frame(self):
+        self.set_frame(self.current_frame+1)
 
     def add_tracker(self):
         self.trackers.append(tracktor())

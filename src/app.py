@@ -1,21 +1,15 @@
-# coding:utf-8
-#from tracktor_ui import dialog
-#from video import VideoCapture
-
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
 from tracktor_ui.dialog import Dialog
-
 import PIL.Image, PIL.ImageTk
-import math
+
+from math import floor
 
 import numpy.matrixlib as np
-import time
 import cv2
 import tkinter
 from tkinter import ttk
 import tkinter.filedialog as fileDialog
-
 
 class App:
     def __init__(self, window, window_title):
@@ -29,10 +23,24 @@ class App:
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
 
-        #set min window size to the videocapture size
         self.load_file()
 
+        self.setup_menu()
 
+        # After it is called once, the update method will be automatically called every delay milliseconds
+        self.delay = 15
+
+        self.update()
+        self.window.mainloop()
+
+    def setup_canvas(self):
+        # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
+        canvas = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height , cursor = "crosshair")
+        canvas.bind("<Button-1>", self.callback1)
+        canvas.grid(column = 0, columnspan = 5,row=1,ipady = 1)
+        return canvas
+
+    def setup_menu(self):
         self.file_menu = tkinter.Menu(self.menu, tearoff = 0)
         self.menu.add_cascade(label = "File", menu = self.file_menu)
 
@@ -48,43 +56,27 @@ class App:
         self.edit_menu.add_command(label="New Trackers", command=self.create_tracker)
         self.edit_menu.add_command(label="Delete Trackers", command = self.donothing)
 
-        #buttons for videos
-        self.play = ttk.Button(self.window,text = "Play", command = self.play)
-        self.play.grid(row = 2,column = 0,sticky = "E")
-
-        self.pause_btn = ttk.Button(self.window,text = "Pause", command = self.pause)
-        self.pause_btn.grid(row = 2,column = 1,sticky = "W")
-
-        #self.nudge_left_btn = ttk.Button(window, text = "<-" ,command = self.previous_frame )
-
-        # After it is called once, the update method will be automatically called every delay milliseconds
-        self.delay = 15
-
-        self.update()
-        self.window.mainloop()
-
-    def setup_canvas(self):
-        # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
-        canvas = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height , cursor = "crosshair")
-        canvas.bind("<Button-1>", self.callback1)
-        canvas.grid(column = 0, columnspan = 5,row=1,ipady = 1)
-        return canvas
-
     def setup_video_functions(self):
-
         #For choosing current frame
         self.frame_label = ttk.Label( text = "frame:", width = 15)
         self.frame_label.grid(row=3,column = 6, sticky = "W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
-        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 1,command = self.set_frame_pos)
+        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 1,command = self.vid.set_frame)
         self.frame_bar.config(length = self.window_width)
         self.frame_bar.grid(row=3,column = 1, columnspan = 3)
 
-        self.nudge_left = ttk.Button(self.window,text = "<", command = self.previous_frame,width = 2)
+        #buttons for videos
+        self.play = ttk.Button(self.window,text = "Play", command = self.vid.play)
+        self.play.grid(row = 2,column = 0,sticky = "E")
+
+        self.pause_btn = ttk.Button(self.window,text = "Pause", command = self.vid.pause)
+        self.pause_btn.grid(row = 2,column = 1,sticky = "W")
+
+        self.nudge_left = ttk.Button(self.window,text = "<", command = self.vid.previous_frame,width = 2)
         self.nudge_left.grid(row = 3,column = 0,sticky = "E")
 
-        self.nudge_right = ttk.Button(self.window,text = ">", command = self.next_frame, width = 2)
+        self.nudge_right = ttk.Button(self.window,text = ">", command = self.vid.next_frame, width = 2)
         self.nudge_right.grid(row = 3,column = 5,sticky = "W")
 
         # Add a grid for dropdown
@@ -152,31 +144,11 @@ class App:
                 self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
 
         #after a certain time, update to the next frame if play is true
-        self.set_frame_bar()
+        self.update_frame_bar()
         self.window.after(self.delay, self.update)
 
-
-    def play(self):
-        if self.vid.play_state is False:
-            self.vid.play_state = True
-
-    def pause(self):
-        #pause only if play is set
-        if self.vid.play_state is True:
-            print("Pausing")
-            self.vid.play_state = False
-
-    def previous_frame(self):
-        self.set_frame_pos(self.vid.current_frame-1)
-        self.set_frame_bar()
-
-    def next_frame(self):
-        self.set_frame_pos(self.vid.current_frame+1)
-        self.set_frame_bar()
-
-
     def callback1(self,event):
-        self.pause()
+        self.vid.pause()
 
         #ratio is calculated between incomming frame to the output
         ratio_x = self.vid.width / self.window_width
@@ -190,9 +162,8 @@ class App:
         self.vid.trackers[self.vid.working_number].clicked = (pos_x, pos_y)
         return event.x, event.y
 
-    def set_frame_bar(self):
+    def update_frame_bar(self):
         self.frame_bar.config(value = self.vid.current_frame)
-
 
     def create_tracker(self):
         #add a tracker in the video
@@ -206,11 +177,6 @@ class App:
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         self.popupMenu.grid(row = 1, column =0)
 
-    def set_frame_pos(self,value):
-        self.vid.current_frame = math.floor(float(value))
-        self.vid.set_frame(self.vid.current_frame)
-
-
     def save_profile(self):
         pass
 
@@ -220,7 +186,6 @@ class App:
         file_types = [('Video files', '*.mp4'), ('All files', '*')]
         dlg = fileDialog.Open()
         file = dlg.show()
-
 
         print(file)
         if file != '':
