@@ -6,31 +6,36 @@ from math import floor
 #MINAREA = 2
 #MAXAREA = 3
 
-class data_bar:
+class Databar:
+    """
+    A Tkinter Scale but with the name and data showing on either side
+    """
     def __init__(self, root, vid, name, 
-                    min, max, 
+                    min_value, max_value, 
                     row, column):
 
-        self.OFFSET = 0
         #assign variable to
         self.root = root
         self.vid = vid
         self.name = name
         self.object = self.vid.trackers[self.vid.working_number]
 
-        #assign value to
-        self.min = min
-        self.max = max
-        self.scale = tkinter.ttk.Scale(from_= min, to=max, command=self.set)
+        #Tkinter scake with range from min to max, and an width(length)
+        self.scale = tkinter.ttk.Scale(from_= min_value, to=max_value, command=self.set)
         self.scale.config (length=480)
+
+        #place tkinter scale on the window grid
         self.scale.grid(row=row, column=column, sticky="W")
 
+        #Apply name on the left hand side of the scale
         self.scale_name = tkinter.ttk.Label(text=name)
         self.scale_name.grid(row=row, column=column - 1, sticky="E")
 
+        #Apply data on the Right hand side of the scale
         self.scale_data = tkinter.ttk.Label()
         self.scale_data.grid(row=row, column=column+1, sticky="E")
 
+        #according to the data's values, update the scales to match
         self.update()
 
 
@@ -56,16 +61,18 @@ class data_bar:
         self.scale_data.config(text=value)
 
     def get(self):
+        current_tracktor = self.vid.trackers[self.vid.working_number]
         if self.name == "Offset":
-            value = self.object.offset
+            value = current_tracktor.offset
         elif self.name == "Blocksize":
-            value = self.object.block_size
+            value = current_tracktor.block_size
         elif self.name == "MinArea":
-            value = self.object.min_area
+            value = current_tracktor.min_area
         elif self.name == "MaxArea":
-            return self.object.max_area
+            return current_tracktor.max_area
         return value
 
     def update(self):
-        self.scale.set(value=self.get())
+        print(self.get())
+        self.scale.config(value = self.get())
         self.scale_data.config(text=self.get())

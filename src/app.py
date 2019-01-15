@@ -1,9 +1,6 @@
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
-from tracktor_ui.dialog import Dialog
 import PIL.Image, PIL.ImageTk
-
-from math import floor
 
 import numpy.matrixlib as np
 import cv2
@@ -26,6 +23,9 @@ class App:
         self.load_file()
 
         self.setup_menu()
+
+        self.canvas = self.setup_canvas()
+        self.setup_video_functions()
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
@@ -98,34 +98,39 @@ class App:
         #setup the menu
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         tkinter.Label(self.mainframe, text="Tracked Individual").grid(row=0, column=0)
-        self.popupMenu.grid(row=1, column =0)
+        self.popupMenu.grid(row=1, column=0)
 
-        offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset", 
-                                min= 5, max= 100, 
-                                row= 4, column= 1
-                                )
-
-        block_size_bar = tracktorOptions.data_bar(self.window, self.vid, "Blocksize", 
-                                min= 1, max= 100, 
-                                row= 5, column= 1
-                                )
-        min_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MinArea", 
-                                min= 1, max= 5000, 
-                                row= 6, column= 1
-                                )
-        max_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MaxArea", 
-                                min= 1, max= 5000, 
-                                row= 7, column= 1
-                                )
+        self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
+                                                  min_value=5, max_value=100,
+                                                  row=4, column=1
+                                                  )
+        self.block_size_bar = tracktorOptions.Databar(self.window, self.vid, "Blocksize",
+                                                      min_value=1, max_value=100,
+                                                      row=5, column=1
+                                                      )
+        self.min_area_bar = tracktorOptions.Databar(self.window, self.vid, "MinArea",
+                                                    min_value=1, max_value=5000,
+                                                    row=6, column=1
+                                                    )
+        self.max_area_bar = tracktorOptions.Databar(self.window, self.vid, "MaxArea",
+                                                    min_value=1, max_value=5000,
+                                                    row=7, column=1
+                                                    )
     # on change dropdown value
-    def change_dropdown(*args):
-        pass
-        # link function to change dropdown
-        self.tkvar.trace(change_dropdown)
+    # def change_dropdown(*args):
+    #     pass
+    #     # link function to change dropdown
+    #     self.tkvar.trace(change_dropdown)
 
     def update(self):
+        #set working number to the selected individual from the dropdown menu
         self.vid.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
-        # Get a frame from the video source
+        #self.offset_bar.scale.config(value = self.vid.trackers[self.vid.working_number].offset)
+        self.offset_bar.update()
+        self.block_size_bar.update()
+        self.min_area_bar.update()
+        self.max_area_bar.update()
+        #updata the data according to the selected user
         self.frame_label.config(text="Frame:"+str(int(self.vid.current_frame)))
 
         #check if we are not the last frame, if we are, stop
@@ -135,12 +140,12 @@ class App:
             frame = cv2.resize(frame, (self.window_width, self.window_height), cv2.INTER_CUBIC)
 
             #update framenumber
-            self.frame_label.config(text ="Frame:" + str(int(self.vid.current_frame)))
+            self.frame_label.config(text="Frame:" + str(int(self.vid.current_frame)))
 
             #if the return for a frame is true
             if ret:
                 #set the canvas to the frame image
-                self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
+                self.photo=PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
         #after a certain time, update to the next frame if play is true
@@ -184,7 +189,7 @@ class App:
     def load_file(self):
         print("loading file")
         file_types = [('Video files', '*.mp4'), ('All files', '*')]
-        dlg = fileDialog.Open()
+        dlg = fileDialog.Open(filetypes = file_types)
         file = dlg.show()
 
         print(file)
@@ -192,8 +197,6 @@ class App:
             self.vid = VideoCapture(file)
             self.vid.play_state = False
             #self.vid.vid.play_state = False
-            self.canvas = self.setup_canvas()
-            self.setup_video_functions()
 
     def donothing(self):
         pass
