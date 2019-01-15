@@ -173,6 +173,15 @@ class VideoCapture:
         """
         self.trackers[self.working_number].max_area = value
 
+    def set_zoom(self, value):
+        """
+        Sets the zoom to adjust region of interest on a specific tracktor
+        Parameters:
+        value: float
+            The zoom multiplier
+        """
+        self.zoom = float(value)
+
     def get_frame(self, tracking=0):
         """
         Returns a processed frame based on what tracking value is passed in
@@ -229,9 +238,10 @@ class VideoCapture:
                                 pos_y + int(self.height/self.zoom),
                                 int(pos_x -(self.width + self.width/self.zoom)):
                                 pos_x + int(self.width/self.zoom)]
+                    roi = cv2.resize(roi, (int(self.width), int(self.height)))
                 except:
                     print("Cannot focus frame")
-                roi = cv2.resize(roi, (int(self.width), int(self.height)))
+
             if ret:
                 return roi
             else:

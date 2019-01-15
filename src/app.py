@@ -58,13 +58,19 @@ class App:
 
     def setup_video_functions(self):
         #For choosing current frame
-        self.frame_label = ttk.Label( text="frame:", width=15)
+        self.frame_label = ttk.Label(text="frame:", width=15)
         self.frame_label.grid(row=3, column=6, sticky="W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
         self.frame_bar  = ttk.Scale(from_=0, to=self.vid.length - 1, command=self.vid.set_frame)
         self.frame_bar.config(length=self.window_width)
         self.frame_bar.grid(row=3, column=1, columnspan=3)
+
+        self.zoom_label = ttk.Label(text="Zoom")
+        self.zoom_label.grid(row=0, column=5,sticky="S")
+        self.zoom_bar = ttk.Scale(from_=10, to=1, command=self.vid.set_zoom, orient=tkinter.VERTICAL)
+        self.zoom_bar.config(length=self.window_height)
+        self.zoom_bar.grid(row=1, column=5)
 
         #buttons for videos
         self.play = ttk.Button(self.window, text="Play", command=self.vid.play)
