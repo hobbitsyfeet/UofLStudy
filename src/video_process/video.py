@@ -1,11 +1,10 @@
 #from YourClassParentDir.YourClass import YourClass
-from video_process.tracktor import tracktor
-#import tracktor.tracktor
 import cv2
 import numpy as np
 from math import floor
 import pandas as pd
 
+from video_process.tracktor import Tracktor
 
 class VideoCapture:
     def __init__(self, video_source=""):
@@ -65,18 +64,17 @@ class VideoCapture:
         self.set_frame(self.current_frame+1)
 
     def add_tracker(self):
-        self.trackers.append(tracktor())
+        self.trackers.append(Tracktor())
 
     def delete_tracker(self, index):
-        del trackers[index]
+        del self.trackers[index]
 
     #search the list of trackers by name and return -1 if not fouond
     def find_tracker_index_by_id(self, name):
         for i in range(len(self.trackers)):
             if name == self.trackers[i].s_id:
                 return i
-        else:
-            return -1
+        return -1
 
     def set_tracker_offset(self, value):
         self.trackers[self.working_number].offset = value

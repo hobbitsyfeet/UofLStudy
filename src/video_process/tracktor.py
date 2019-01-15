@@ -9,7 +9,7 @@ import random
 #from random import randrange, seed
 from time import time
 
-class tracktor():
+class Tracktor():
     def __init__(self, 
         s_id ="NO_ID", 
         colour = None, 
