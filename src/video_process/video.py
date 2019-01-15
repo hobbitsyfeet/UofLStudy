@@ -146,22 +146,25 @@ class VideoCapture:
         else:
             return (frame)
 
-    def show_all(self, frame):
+    def show_all(self, frame, detail=True):
         """
         Description: this function returns a frame that shows all of the tracked individuals
         """
         #iterate through all
+        final = frame
         for i in range(len(self.trackers)):
-            ret, final = self.process(self.trackers[i], frame, self.current_frame, detail=False)
+            #accumulate tracker's processes onto final frame
+            ret, final = self.process(self.trackers[i], final, self.current_frame)
 
-            if ret is True:
+            if ret is True and detail is False:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
-        if ret:
+
+        if ret is True and detail is True:
             return final
         else:
             return frame
 
-    def process(self, tracktor, frame, this, detail=True):
+    def process(self, tracktor, frame, this):
         """
         This function takes a frame, and a tracked individua and performs operations
         on the frame and applies information to the tracktor like x, y coordinates
