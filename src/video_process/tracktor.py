@@ -6,15 +6,15 @@ from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
 import random
-#from random import randrange,seed
+#from random import randrange, seed
 from time import time
 
 class tracktor():
-    def __init__(self,
-        s_id ="NO_ID",
-        colour = None,
-        block_size = 51, offset = 20,
-        min_area = 100, max_area = 5000,
+    def __init__(self, 
+        s_id ="NO_ID", 
+        colour = None, 
+        block_size = 51, offset = 20, 
+        min_area = 100, max_area = 5000, 
         scaling = 1.0
         ):
 
@@ -29,7 +29,7 @@ class tracktor():
         self.s_id = s_id
         if colour is None:
             random.seed(time())
-            colour = (random.randrange(0,255,1),random.randrange(0,255,1),random.randrange(0,255,1))
+            colour = (random.randrange(0, 255, 1), random.randrange(0, 255, 1), random.randrange(0, 255, 1))
         self.colour = colour
 
         # this is the block_size and offset used for adaptive thresholding (block_size should always be odd)
@@ -47,13 +47,13 @@ class tracktor():
         self.max_area = max_area
         self.area = 0
 
-        self.clicked = (-1,-1)
+        self.clicked = (-1, -1)
         # the scaling parameter can be used to speed up tracking if video resolution is too high (use value 0-1)
         self.scaling = scaling
 
         # kernel for erosion and dilation
         # useful since thin spider limbs are sometimes detected as separate objects
-        self.kernel = np.ones((5,5),np.uint8)
+        self.kernel = np.ones((5, 5), np.uint8)
 
         # mot determines whether the tracker is being used in noisy conditions to track a single object or for multi-object
         # using this will enable k-means clustering to force n_inds number of animals
@@ -66,18 +66,18 @@ class tracktor():
         ## Video writer class to output video with contour and centroid of tracked object(s)
         # make sure the frame size matches size of array 'final'
         fourcc = cv2.VideoWriter_fourcc(*codec)
-        #output_framesize = (int(cap.read()[1].shape[1]*scaling),int(cap.read()[1].shape[0]*scaling))
+        #output_framesize = (int(cap.read()[1].shape[1]*scaling), int(cap.read()[1].shape[0]*scaling))
         #out = cv2.VideoWriter(filename = output_vidpath, fourcc = fourcc, fps = 60.0, frameSize = output_framesize, isColor = True)
 
         ## Individual location(s) measured in the last and current step
-        self.meas_last = list(np.zeros((1,2)))
-        self.meas_now = list(np.zeros((1,2)))
+        self.meas_last = list(np.zeros((1, 2)))
+        self.meas_now = list(np.zeros((1, 2)))
 
         #data frame?
         self.df = []
 
 
-    def colour_to_thresh(self,frame):
+    def colour_to_thresh(self, frame):
         """
         This function retrieves a video frame and preprocesses it for object tracking.
         The code blurs image to reduce noise, converts it to greyscale and then returns a
@@ -97,14 +97,14 @@ class tracktor():
         Returns
         -------
         thresh: ndarray, shape(n_rows, n_cols, 1)
-            binarised(0,255) image
+            binarised(0, 255) image
         """
-        blur = cv2.blur(frame, (5,5))
+        blur = cv2.blur(frame, (5, 5))
         gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
         thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, self.block_size, self.offset)
         return thresh
 
-    def detect_and_draw_contours(self,frame, thresh):
+    def detect_and_draw_contours(self, frame, thresh):
         """
         This function detects contours, thresholds them based on area and draws them.
 
@@ -113,7 +113,7 @@ class tracktor():
         frame: ndarray, shape(n_rows, n_cols, 3)
             source image containing all three colour channels
         thresh: ndarray, shape(n_rows, n_cols, 1)
-            binarised(0,255) image
+            binarised(0, 255) image
         meas_last: array_like, dtype=float
             individual's location on previous frame
         meas_now: array_like, dtype=float
@@ -150,7 +150,7 @@ class tracktor():
         while i < len(contours):
 
             #if we clicked this frame
-            if self.clicked != (-1,-1):
+            if self.clicked != (-1, -1):
                 #check if the position we clicked is inside of the contour
                 dist = cv2.pointPolygonTest(contours[i], self.clicked, False)
                 #if it is not (-1 if not, 1 if it is) we delete the contour
@@ -163,7 +163,7 @@ class tracktor():
                 del contours[i]
 
             else:
-                cv2.drawContours(final, contours, i, (0,0,255), 1)
+                cv2.drawContours(final, contours, i, (0, 0, 255), 1)
                 M = cv2.moments(contours[i])
                 if M['m00'] != 0:
                 	cx = M['m10']/M['m00']
@@ -172,12 +172,12 @@ class tracktor():
                 	cx = 0
                 	cy = 0
 
-                self.meas_now.append([cx,cy])
+                self.meas_now.append([cx, cy])
                 i += 1
-        self.clicked = (-1,-1)
+        self.clicked = (-1, -1)
         return final, contours
 
-    def apply_k_means(self,contours):
+    def apply_k_means(self, contours):
         """
         This function applies the k-means clustering algorithm to separate merged
         contours. The algorithm is applied when detected contours are fewer than
@@ -212,7 +212,7 @@ class tracktor():
         for i in range(l):
             x = int(tuple(kmeans.cluster_centers_[i])[0])
             y = int(tuple(kmeans.cluster_centers_[i])[1])
-            self.meas_now.append([x,y])
+            self.meas_now.append([x, y])
         return contours
 
     def hungarian_algorithm(self):
@@ -245,10 +245,10 @@ class tracktor():
         if self.meas_now.shape !=self.meas_last.shape:
             if self.meas_now.shape[0] < self.meas_last.shape[0]:
                 while self.meas_now.shape[0] !=self.meas_last.shape[0]:
-                   self.meas_last = np.delete(self.meas_last,self.meas_last.shape[0]-1, 0)
+                   self.meas_last = np.delete(self.meas_last, self.meas_last.shape[0]-1, 0)
             else:
                 result = np.zeros(self.meas_now.shape)
-                result[:self.meas_last.shape[0],:self.meas_last.shape[1]] = self.meas_last
+                result[:self.meas_last.shape[0], :self.meas_last.shape[1]] = self.meas_last
                 self.meas_last = result
 
         self.meas_last = list(self.meas_last)
@@ -257,7 +257,7 @@ class tracktor():
         row_ind, col_ind = linear_sum_assignment(cost)
         return row_ind, col_ind
 
-    def reorder_and_draw(self,final, col_ind, fr_no):
+    def reorder_and_draw(self, final, col_ind, fr_no):
         """
         This function reorders the measurements in the current frame to match
         identity from previous frame. This is done by using the results of the
@@ -298,7 +298,7 @@ class tracktor():
         if equal == False:
             current_ids = col_ind.copy()
             reordered = [i[0] for i in sorted(enumerate(current_ids), key=lambda x:x[1])]
-            self.meas_now = [x for (y,x) in sorted(zip(reordered,self.meas_now))]
+            self.meas_now = [x for (y, x) in sorted(zip(reordered, self.meas_now))]
 
         for i in range(1):
             cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 5, self.colour, -1, cv2.LINE_AA)
@@ -306,14 +306,14 @@ class tracktor():
 
             #circle for area (A = pi*r^2) => r = sqrt(A/pi)
             min_radius = int(np.sqrt(self.min_area/np.pi))
-            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255,255,255), 1, cv2.LINE_AA)
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255, 255, 255), 1, cv2.LINE_AA)
 
             max_radius = int(np.sqrt(self.max_area/np.pi))
-            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, (0,0,255), 1, cv2.LINE_AA)
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, (0, 0, 255), 1, cv2.LINE_AA)
 
         # add frame number
         font = cv2.FONT_HERSHEY_SCRIPT_SIMPLEX
-        #cv2.putText(final, str(int(fr_no)), (5,30), font, 1, (255,255,255), 2)
+        #cv2.putText(final, str(int(fr_no)), (5, 30), font, 1, (255, 255, 255), 2)
 
         return final
 

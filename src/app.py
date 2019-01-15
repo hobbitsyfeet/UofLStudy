@@ -35,14 +35,14 @@ class App:
 
     def setup_canvas(self):
         # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
-        canvas = tkinter.Canvas(self.window, width = self.window_width, height = self.window_height , cursor = "crosshair")
+        canvas = tkinter.Canvas(self.window, width=self.window_width, height=self.window_height, cursor="crosshair")
         canvas.bind("<Button-1>", self.callback1)
-        canvas.grid(column = 0, columnspan = 5,row=1,ipady = 1)
+        canvas.grid(column=0, columnspan=5, row=1, ipady=1)
         return canvas
 
     def setup_menu(self):
-        self.file_menu = tkinter.Menu(self.menu, tearoff = 0)
-        self.menu.add_cascade(label = "File", menu = self.file_menu)
+        self.file_menu = tkinter.Menu(self.menu, tearoff=0)
+        self.menu.add_cascade(label="File", menu=self.file_menu)
 
         self.file_menu.add_command(label="New", command=self.donothing)
         self.file_menu.add_command(label="Open", command=self.load_file)
@@ -51,37 +51,37 @@ class App:
         self.file_menu.add_command(label="Export All", command=self.vid.export_all)
         self.file_menu.add_command(label="Close", command=self.donothing)
 
-        self.edit_menu = tkinter.Menu(self.menu, tearoff = 0)
-        self.menu.add_cascade(label = "Edit", menu = self.edit_menu)
+        self.edit_menu = tkinter.Menu(self.menu, tearoff=0)
+        self.menu.add_cascade(label="Edit", menu=self.edit_menu)
         self.edit_menu.add_command(label="New Trackers", command=self.create_tracker)
-        self.edit_menu.add_command(label="Delete Trackers", command = self.donothing)
+        self.edit_menu.add_command(label="Delete Trackers", command=self.donothing)
 
     def setup_video_functions(self):
         #For choosing current frame
-        self.frame_label = ttk.Label( text = "frame:", width = 15)
-        self.frame_label.grid(row=3,column = 6, sticky = "W")
+        self.frame_label = ttk.Label( text="frame:", width=15)
+        self.frame_label.grid(row=3, column=6, sticky="W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
-        self.frame_bar  = ttk.Scale(from_=0, to = self.vid.length - 1,command = self.vid.set_frame)
-        self.frame_bar.config(length = self.window_width)
-        self.frame_bar.grid(row=3,column = 1, columnspan = 3)
+        self.frame_bar  = ttk.Scale(from_=0, to=self.vid.length - 1, command=self.vid.set_frame)
+        self.frame_bar.config(length=self.window_width)
+        self.frame_bar.grid(row=3, column=1, columnspan=3)
 
         #buttons for videos
-        self.play = ttk.Button(self.window,text = "Play", command = self.vid.play)
-        self.play.grid(row = 2,column = 0,sticky = "E")
+        self.play = ttk.Button(self.window, text="Play", command=self.vid.play)
+        self.play.grid(row = 2, column=0, sticky="E")
 
-        self.pause_btn = ttk.Button(self.window,text = "Pause", command = self.vid.pause)
-        self.pause_btn.grid(row = 2,column = 1,sticky = "W")
+        self.pause_btn = ttk.Button(self.window, text="Pause", command=self.vid.pause)
+        self.pause_btn.grid(row=2, column=1, sticky="W")
 
-        self.nudge_left = ttk.Button(self.window,text = "<", command = self.vid.previous_frame,width = 2)
-        self.nudge_left.grid(row = 3,column = 0,sticky = "E")
+        self.nudge_left = ttk.Button(self.window, text="<", command=self.vid.previous_frame, width=2)
+        self.nudge_left.grid(row=3, column=0, sticky="E")
 
-        self.nudge_right = ttk.Button(self.window,text = ">", command = self.vid.next_frame, width = 2)
-        self.nudge_right.grid(row = 3,column = 5,sticky = "W")
+        self.nudge_right = ttk.Button(self.window, text=">", command=self.vid.next_frame, width=2)
+        self.nudge_right.grid(row=3, column=5, sticky="W")
 
         # Add a grid for dropdown
         self.mainframe = tkinter.Frame(self.window)
-        self.mainframe.grid(row=0,column=0, sticky="NW" )
+        self.mainframe.grid(row=0, column=0, sticky="NW" )
         self.mainframe.columnconfigure(5)
         self.mainframe.rowconfigure(5)
 
@@ -97,24 +97,24 @@ class App:
 
         #setup the menu
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        tkinter.Label(self.mainframe, text="Tracked Individual").grid(row = 0, column = 0)
-        self.popupMenu.grid(row = 1, column =0)
+        tkinter.Label(self.mainframe, text="Tracked Individual").grid(row=0, column=0)
+        self.popupMenu.grid(row=1, column =0)
 
-        offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset",
-                                min= 5, max= 100,
+        offset_bar = tracktorOptions.data_bar(self.window, self.vid, "Offset", 
+                                min= 5, max= 100, 
                                 row= 4, column= 1
                                 )
 
-        block_size_bar = tracktorOptions.data_bar(self.window, self.vid, "Blocksize",
-                                min= 1, max= 100,
+        block_size_bar = tracktorOptions.data_bar(self.window, self.vid, "Blocksize", 
+                                min= 1, max= 100, 
                                 row= 5, column= 1
                                 )
-        min_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MinArea",
-                                min= 1, max= 5000,
+        min_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MinArea", 
+                                min= 1, max= 5000, 
                                 row= 6, column= 1
                                 )
-        max_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MaxArea",
-                                min= 1, max= 5000,
+        max_area_bar = tracktorOptions.data_bar(self.window, self.vid, "MaxArea", 
+                                min= 1, max= 5000, 
                                 row= 7, column= 1
                                 )
     # on change dropdown value
@@ -126,13 +126,13 @@ class App:
     def update(self):
         self.vid.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
         # Get a frame from the video source
-        self.frame_label.config(text = "Frame:"+str(int(self.vid.current_frame)))
+        self.frame_label.config(text="Frame:"+str(int(self.vid.current_frame)))
 
         #check if we are not the last frame, if we are, stop
         if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(self.vid.working_number)
-            frame = cv2.resize(frame,(self.window_width, self.window_height),cv2.INTER_CUBIC)
+            frame = cv2.resize(frame, (self.window_width, self.window_height), cv2.INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text ="Frame:" + str(int(self.vid.current_frame)))
@@ -141,13 +141,13 @@ class App:
             if ret:
                 #set the canvas to the frame image
                 self.photo = PIL.ImageTk.PhotoImage(image = PIL.Image.fromarray(frame))
-                self.canvas.create_image(0, 0, image = self.photo, anchor = tkinter.NW)
+                self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
         #after a certain time, update to the next frame if play is true
         self.update_frame_bar()
         self.window.after(self.delay, self.update)
 
-    def callback1(self,event):
+    def callback1(self, event):
         self.vid.pause()
 
         #ratio is calculated between incomming frame to the output
@@ -175,7 +175,7 @@ class App:
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
         self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        self.popupMenu.grid(row = 1, column =0)
+        self.popupMenu.grid(row=1, column =0)
 
     def save_profile(self):
         pass

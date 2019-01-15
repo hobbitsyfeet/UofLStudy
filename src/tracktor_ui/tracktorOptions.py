@@ -7,8 +7,8 @@ from math import floor
 #MAXAREA = 3
 
 class data_bar:
-    def __init__(self, root, vid, name,
-                    min, max,
+    def __init__(self, root, vid, name, 
+                    min, max, 
                     row, column):
 
         self.OFFSET = 0
@@ -21,15 +21,15 @@ class data_bar:
         #assign value to
         self.min = min
         self.max = max
-        self.scale = tkinter.ttk.Scale(from_= min, to = max,command = self.set)
-        self.scale.config (length = 480)
-        self.scale.grid(row = row, column = column,sticky = "W")
+        self.scale = tkinter.ttk.Scale(from_= min, to=max, command=self.set)
+        self.scale.config (length=480)
+        self.scale.grid(row=row, column=column, sticky="W")
 
-        self.scale_name = tkinter.ttk.Label(text = name)
-        self.scale_name.grid(row = row, column = column - 1, sticky = "E")
+        self.scale_name = tkinter.ttk.Label(text=name)
+        self.scale_name.grid(row=row, column=column - 1, sticky="E")
 
         self.scale_data = tkinter.ttk.Label()
-        self.scale_data.grid(row = row, column = column+1, sticky = "E")
+        self.scale_data.grid(row=row, column=column+1, sticky="E")
 
         self.update()
 
@@ -53,7 +53,7 @@ class data_bar:
         elif self.name == "MaxArea":
             self.vid.set_tracker_maxarea(value)
         #display it's value
-        self.scale_data.config(text = value)
+        self.scale_data.config(text=value)
 
     def get(self):
         if self.name == "Offset":
@@ -68,4 +68,4 @@ class data_bar:
 
     def update(self):
         self.scale.set(value=self.get())
-        self.scale_data.config(text = self.get())
+        self.scale_data.config(text=self.get())

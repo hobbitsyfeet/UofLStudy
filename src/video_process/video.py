@@ -56,7 +56,7 @@ class VideoCapture:
     def set_frame(self, value):
         value = floor(float(value))
         self.current_frame = value
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES,value)
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, value)
 
     def previous_frame(self):
         self.set_frame(self.current_frame-1)
@@ -67,32 +67,32 @@ class VideoCapture:
     def add_tracker(self):
         self.trackers.append(tracktor())
 
-    def delete_tracker(self,index):
+    def delete_tracker(self, index):
         del trackers[index]
 
     #search the list of trackers by name and return -1 if not fouond
-    def find_tracker_index_by_id(self,name):
+    def find_tracker_index_by_id(self, name):
         for i in range(len(self.trackers)):
             if name == self.trackers[i].s_id:
                 return i
         else:
             return -1
 
-    def set_tracker_offset(self,value):
+    def set_tracker_offset(self, value):
         self.trackers[self.working_number].offset = value
 
-    def set_tracker_blocksize(self,value):
+    def set_tracker_blocksize(self, value):
         if value % 2 == 0:
             value += 1
         self.trackers[self.working_number].block_size = value
 
-    def set_tracker_minarea(self,value):
+    def set_tracker_minarea(self, value):
         self.trackers[self.working_number].min_area = value
 
-    def set_tracker_maxarea(self,value):
+    def set_tracker_maxarea(self, value):
         self.trackers[self.working_number].max_area = value
 
-    def get_frame(self,tracking = 0):
+    def get_frame(self, tracking = 0):
         """
         Description: get frame gets the tracking number, and depending on the
         tracking, we determine what to track (-2: NONE, -1 ALL, 1...n tracking index)
@@ -112,29 +112,29 @@ class VideoCapture:
             #set the current frame number to the frame we just received
             self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             if tracking == self.NO_TRACKING:
-                return (ret,frame)
+                return (ret, frame)
             elif tracking == self.TRACK_ALL:
                 frame = self.show_all(frame)
 
             elif tracking != self.TRACK_ALL:
-                frame = self.get_focused_frame(frame,tracking)
+                frame = self.get_focused_frame(frame, tracking)
         if ret:
             #when we retreive a new frame, we can assume we updated values with it
-            return (ret,frame)
+            return (ret, frame)
 
-    def get_focused_frame(self,frame,individual):
+    def get_focused_frame(self, frame, individual):
         """
         Description: This function returns a frame centered and zoomed in on the
         individual being tracked.
         """
         if self.cap.isOpened():
-            # Apply mask to aarea of interest\n",
-            ret,frame = self.process(self.trackers[individual],frame,self.current_frame)
+            # Apply mask to aarea of interest\n", 
+            ret, frame = self.process(self.trackers[individual], frame, self.current_frame)
             if ret is True:
                 x = int(floor(self.trackers[individual].meas_now[0][0]))
                 y = int(floor(self.trackers[individual].meas_now[0][1]))
                 try:
-                    roi = frame[int(y- (self.height + self.height/self.zoom)):y + int(self.height/self.zoom),
+                    roi = frame[int(y- (self.height + self.height/self.zoom)):y + int(self.height/self.zoom), 
                                 int(x -(self.width + self.width/self.zoom)):x + int(self.width/self.zoom)]
                 except:
                     print("Cannot focus frame")
@@ -146,13 +146,13 @@ class VideoCapture:
         else:
             return (frame)
 
-    def show_all(self,frame):
+    def show_all(self, frame):
         """
         Description: this function returns a frame that shows all of the tracked individuals
         """
         #iterate through all
         for i in range(len(self.trackers)):
-            ret,final = self.process(self.trackers[i],frame,self.current_frame,detail = False)
+            ret, final = self.process(self.trackers[i], frame, self.current_frame, detail=False)
 
             if ret is True:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5, self.trackers[i].colour, -1, cv2.LINE_AA)
@@ -161,18 +161,18 @@ class VideoCapture:
         else:
             return frame
 
-    def process(self,tracktor,frame,this,detail=True):
+    def process(self, tracktor, frame, this, detail=True):
         """
         This function takes a frame, and a tracked individua and performs operations
-        on the frame and applies information to the tracktor like x,y coordinates
+        on the frame and applies information to the tracktor like x, y coordinates
         """
         try:
             #eliminate small noise
             thresh = tracktor.colour_to_thresh(frame)
-            thresh = cv2.erode(thresh, tracktor.kernel, iterations = 1)
-            thresh = cv2.dilate(thresh, tracktor.kernel, iterations = 1)
+            thresh = cv2.erode(thresh, tracktor.kernel, iterations=1)
+            thresh = cv2.dilate(thresh, tracktor.kernel, iterations=1)
 
-            #x,y coordinates of previous tracktor
+            #x, y coordinates of previous tracktor
             if len(tracktor.meas_now) > 0:
                 pos_x = tracktor.meas_now[0][0]
                 pos_y = tracktor.meas_now[0][1]
@@ -183,7 +183,7 @@ class VideoCapture:
             final, contours = tracktor.detect_and_draw_contours(frame, thresh)
 
             #detect if the tracker is changed
-            changed = self.tracker_changed(pos_x,pos_y,contours)
+            changed = self.tracker_changed(pos_x, pos_y, contours)
             if changed is True:
                 print(tracktor.s_id + "has changed")
 
@@ -195,9 +195,9 @@ class VideoCapture:
             ret = True
         except:
             ret = False
-            return ret,frame
+            return ret, frame
 
-        return (True,final)
+        return (True, final)
 
     def tracker_changed(self, x, y, contours):
         #assign default flag to True (assume changed until proven not)
@@ -208,7 +208,7 @@ class VideoCapture:
             #we look at all the contours
             for contour in contours:
                 #check if previous position exists in updated contour (1= Yes, -1= No)
-                dist = cv2.pointPolygonTest(contour,(x,y), False)
+                dist = cv2.pointPolygonTest(contour, (x, y), False)
                 #print(dist)
                 #if previous point exists in the same contour, set changed flag to false
                 if dist != -1.0:
@@ -256,7 +256,7 @@ class VideoCapture:
                 try:
                     #if we have a new frame, append it
                     if self.current_frame != last_frame:
-                        self.trackers[i].df.append([self.current_frame,
+                        self.trackers[i].df.append([self.current_frame, 
                                                 self.trackers[i].meas_now[0][0], #store X coord
                                                 self.trackers[i].meas_now[0][1] #store Y coord
                                                 ])
@@ -265,7 +265,7 @@ class VideoCapture:
                     print("Could not get location from " + self.trackers[i].s_id +
                                 " at frame " + str(self.current_frame)
                                 )
-                    self.trackers[i].df.append([self.current_frame,-1,-1])
+                    self.trackers[i].df.append([self.current_frame, -1, -1])
 
         self.cap.set(cv2.CAP_PROP_FPS, self.FPS)
         print("Starting to export....")
@@ -273,7 +273,7 @@ class VideoCapture:
         for i in range(len(self.trackers)):
             print("Exporting: " + self.trackers[i].s_id)
             #load our data into a pandas dataframe
-            self.trackers[i].df = pd.DataFrame(np.matrix(self.trackers[i].df), columns = ['frame','pos_x','pos_y'])
+            self.trackers[i].df = pd.DataFrame(np.matrix(self.trackers[i].df), columns = ['frame', 'pos_x', 'pos_y'])
             #export the data into a csv file
             self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].s_id + ".csv")
 
