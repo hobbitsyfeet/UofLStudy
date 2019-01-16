@@ -9,6 +9,16 @@ from tkinter import ttk
 import tkinter.filedialog as fileDialog
 
 class App:
+    """
+    This is where the video meets the interface where the commands are called.
+    App contains all the tkinter widgets (sliders, buttons, ect.)
+    and the widgets are then mapped to functions called onto the video
+
+    App contains the update loop where the changes are made, the video
+    then sends the processed frame with the new changes. The app then
+    takes the frame from the video, and displays it using a Pillow converted
+    frame.
+    """
     def __init__(self, window, window_title):
         self.window = window
         self.window.title(window_title)
@@ -25,15 +35,21 @@ class App:
         self.setup_menu()
 
         self.canvas = self.setup_canvas()
+
         self.setup_video_functions()
 
         # After it is called once, the update method will be automatically called every delay milliseconds
         self.delay = 15
 
+        #initialize update, this keeps looping as mainloop is called
         self.update()
         self.window.mainloop()
 
     def setup_canvas(self):
+        """
+        This creates a tkinter canvas for the video to display in.
+        It also defines the cursor and cursor function.
+        """
         # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
         canvas = tkinter.Canvas(self.window, width=self.window_width, height=self.window_height, cursor="crosshair")
         canvas.bind("<Button-1>", self.callback1)
@@ -41,6 +57,10 @@ class App:
         return canvas
 
     def setup_menu(self):
+        """
+        This creates tkinter dropdown menu at the top consisting of File, Edit,
+        and their children.
+        """
         self.file_menu = tkinter.Menu(self.menu, tearoff=0)
         self.menu.add_cascade(label="File", menu=self.file_menu)
 
@@ -57,6 +77,10 @@ class App:
         self.edit_menu.add_command(label="Delete Trackers", command=self.donothing)
 
     def setup_video_functions(self):
+        """
+        This creates the interface for all the buttons and scales(sliders) associated with
+        changing the data in the video.
+        """
         #For choosing current frame
         self.frame_label = ttk.Label(text="frame:", width=15)
         self.frame_label.grid(row=3, column=6, sticky="W")
@@ -107,6 +131,7 @@ class App:
         self.popupMenu.grid(row=1, column=0)
 
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
+
                                                   min_value=5, max_value=100,
                                                   row=4, column=1
                                                   )
@@ -129,6 +154,14 @@ class App:
     #     self.tkvar.trace(change_dropdown)
 
     def update(self):
+        """
+        Update presents the updated frame with the new data, and also updates
+        the interface based on the data at hand. (IE sliders change data, and if
+        the tracker is changed to another individual, change the sliders to match)
+
+        It continually receives a processed frame and displays it, then 
+        calls itself after a delay. (This is the form Tkinter is designed for)
+        """
         #set working number to the selected individual from the dropdown menu
         self.vid.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
         #self.offset_bar.scale.config(value = self.vid.trackers[self.vid.working_number].offset)
@@ -159,6 +192,17 @@ class App:
         self.window.after(self.delay, self.update)
 
     def callback1(self, event):
+        """
+        This function calculates the x and y coordinates based on 
+        the location clicked on the canvas, and maps it according to
+        the resolution of the video. 
+
+        It then assignes the location to the tracktor object, allowing it
+        to detect and delete all contours but the one the point exists in.
+
+        Ex. If the display is 720x480 and the video is 1080x720, it
+        maps the pixel from one to another.
+        """
         self.vid.pause()
 
         #ratio is calculated between incomming frame to the output
@@ -174,9 +218,21 @@ class App:
         return event.x, event.y
 
     def update_frame_bar(self):
+        """
+        A simple function that sets the position of the frame bar
+        based on the current frame.
+        """
         self.frame_bar.config(value = self.vid.current_frame)
 
     def create_tracker(self):
+        """
+        This function adds a tracktor object to the tracker list (appended).
+        The name is displayed on the popup menu(NOID when initialized),
+        and then creates a new popup menu with the new data. 
+
+        NOTE: THIS FUNCTION NEEDS TO BE ABLE TO CHANGE NAME, 
+        AND BE UPDATED WITHOUT CREATING A NEW MENU EVERY TIME 
+        """
         #add a tracker in the video
         self.vid.add_tracker()
         index = len(self.vid.trackers)-1
@@ -189,10 +245,17 @@ class App:
         self.popupMenu.grid(row=1, column =0)
 
     def save_profile(self):
+        """
+        This function is intended to provide a save, exit and load up again experience.
+        NOTE: NOT IMPLEMENTED
+        """
         pass
 
         #loadfile finds a file from dialog
     def load_file(self):
+        """
+        This function opens a file selection, and loads up the video selected.
+        """
         print("loading file")
         file_types = [('Video files', '*.mp4'), ('All files', '*')]
         dlg = fileDialog.Open(filetypes = file_types)
@@ -201,8 +264,12 @@ class App:
         print(file)
         if file != '':
             self.vid = VideoCapture(file)
-            self.vid.play_state = False
-            #self.vid.vid.play_state = False
 
     def donothing(self):
+        """
+        This function, literally, does nothing.
+        
+        The intent is to provide buttons with no function attatched.
+        A filler.
+        """
         pass
