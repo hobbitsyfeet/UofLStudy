@@ -1,12 +1,13 @@
+
+#pip packages
+import tkinter
+from tkinter import ttk, filedialog
+from PIL import Image, ImageTk
+import cv2
+#local
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
-import PIL.Image, PIL.ImageTk
 
-import numpy.matrixlib as np
-import cv2
-import tkinter
-from tkinter import ttk
-import tkinter.filedialog as fileDialog
 
 class App:
     """
@@ -184,7 +185,7 @@ class App:
             #if the return for a frame is true
             if ret:
                 #set the canvas to the frame image
-                self.photo=PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(frame))
+                self.photo=ImageTk.PhotoImage(image=Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
         #after a certain time, update to the next frame if play is true
@@ -258,7 +259,7 @@ class App:
         """
         print("loading file")
         file_types = [('Video files', '*.mp4'), ('All files', '*')]
-        dlg = fileDialog.Open(filetypes = file_types)
+        dlg = filedialog.Open(filetypes=file_types)
         file = dlg.show()
 
         print(file)
@@ -268,7 +269,7 @@ class App:
     def donothing(self):
         """
         This function, literally, does nothing.
-        
+
         The intent is to provide buttons with no function attatched.
         A filler.
         """
