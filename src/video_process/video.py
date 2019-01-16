@@ -56,7 +56,7 @@ class VideoCapture:
         self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
-        self.zoom = 4
+        self.zoom = 1
 
 
     def play(self):
@@ -263,6 +263,7 @@ class VideoCapture:
         """
         #iterate through all
         final = frame
+        ret=True
         for i in range(len(self.trackers)):
             #accumulate tracker's processes onto final frame
             ret, final = self.process(self.trackers[i], final)

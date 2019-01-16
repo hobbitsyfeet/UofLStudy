@@ -10,9 +10,9 @@ class Databar:
     """
     A Tkinter Scale but with the name and data showing on either side
     """
-    def __init__(self, root, vid, name, 
-                    min_value, max_value, 
-                    row, column):
+    def __init__(self, root, vid, name,
+                 min_value, max_value,
+                 row, column):
 
         #assign variable to
         self.root = root
@@ -21,8 +21,8 @@ class Databar:
         self.object = self.vid.trackers[self.vid.working_number]
 
         #Tkinter scake with range from min to max, and an width(length)
-        self.scale = tkinter.ttk.Scale(from_= min_value, to=max_value, command=self.set)
-        self.scale.config (length=480)
+        self.scale = tkinter.ttk.Scale(from_=min_value, to=max_value, command=self.set)
+        self.scale.config(length=480)
 
         #place tkinter scale on the window grid
         self.scale.grid(row=row, column=column, sticky="W")
@@ -33,13 +33,23 @@ class Databar:
 
         #Apply data on the Right hand side of the scale
         self.scale_data = tkinter.ttk.Label()
-        self.scale_data.grid(row=row, column=column+1, sticky="E")
+        self.scale_data.grid(row=row, column=column + 1, sticky="E")
 
         #according to the data's values, update the scales to match
         self.update()
 
 
     def set(self, value):
+        """
+        Assigns value from scale according to the name of the Databar 
+
+        NOTE: REVISE HOW ITS DONE
+
+        Parameters
+        ----------
+        value: float
+            value to assign tracktor variables
+        """
         #check the name if we are tracking a new individual, if so set our object
         if self.object.s_id != self.vid.trackers[self.vid.working_number].s_id:
 
@@ -61,6 +71,15 @@ class Databar:
         self.scale_data.config(text=value)
 
     def get(self):
+        """
+        Returns a value according to the name of the Databar
+        
+        NOTE: REVISE HOW ITS DONE
+
+        Returns
+        -------
+        value: float
+        """
         current_tracktor = self.vid.trackers[self.vid.working_number]
         if self.name == "Offset":
             value = current_tracktor.offset
@@ -73,6 +92,5 @@ class Databar:
         return value
 
     def update(self):
-        print(self.get())
         self.scale.config(value = self.get())
         self.scale_data.config(text=self.get())
