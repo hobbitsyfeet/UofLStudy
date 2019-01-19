@@ -211,13 +211,13 @@ class VideoCapture:
                 frame = self.show_all(frame)
 
             elif tracking != self.TRACK_ALL:
-                ret, frame = self.process(frame, self.trackers[tracking])
-                ret, frame = self.get_focused_frame(frame, self.trackers[tracking])
+                    ret, frame = self.process(frame, self.trackers[tracking])
+                    ret, frame = self.get_focused_frame(frame, self.trackers[tracking], self.zoom)
         if ret:
             #when we retreive a new frame, we can assume we updated values with it
             return (ret, frame)
 
-    def get_focused_frame(self, frame, tracktor):
+    def get_focused_frame(self, frame, tracktor, zoom):
         """
         Returns a frame centered and zoomed in on the
         individual being tracked.
@@ -231,10 +231,10 @@ class VideoCapture:
         try:
             pos_x = int(floor(tracktor.meas_now[0][0]))
             pos_y = int(floor(tracktor.meas_now[0][1]))
-            roi = frame[int(pos_y- (self.height + self.height/self.zoom)):
-                        pos_y + int(self.height/self.zoom),
-                        int(pos_x -(self.width + self.width/self.zoom)):
-                        pos_x + int(self.width/self.zoom)]
+            roi = frame[int(pos_y- (self.height + self.height/zoom)):
+                        pos_y + int(self.height/zoom),
+                        int(pos_x -(self.width + self.width/zoom)):
+                        pos_x + int(self.width/zoom)]
             roi = cv2.resize(roi, (int(self.width), int(self.height)))
             return (True, roi)
         except:
@@ -315,13 +315,11 @@ class VideoCapture:
 
             #try to re-draw, separate try-except block allows redraw of min_area/max_area
             final = tracktor.reorder_and_draw(final, col_ind, self.current_frame)
-
-            ret = True
+            return (True, final)
         except:
-            ret = False
-            return ret, frame
+            return (False, frame)
 
-        return (True, final)
+        
 
     def tracker_changed(self, pos_x, pos_y, contours):
         """
