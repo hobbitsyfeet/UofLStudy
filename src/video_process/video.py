@@ -211,12 +211,13 @@ class VideoCapture:
                 frame = self.show_all(frame)
 
             elif tracking != self.TRACK_ALL:
-                frame = self.get_focused_frame(frame, tracking)
+                ret, frame = self.process(frame, self.trackers[tracking])
+                ret, frame = self.get_focused_frame(frame, self.trackers[tracking])
         if ret:
             #when we retreive a new frame, we can assume we updated values with it
             return (ret, frame)
 
-    def get_focused_frame(self, frame, individual):
+    def get_focused_frame(self, frame, tracktor):
         """
         Returns a frame centered and zoomed in on the
         individual being tracked.
@@ -227,27 +228,19 @@ class VideoCapture:
         individual: int
             identical to working_number but local
         """
-        if self.cap.isOpened():
-            # Apply mask to aarea of interest"
-            ret, frame = self.process(self.trackers[individual], frame)
-            if ret is True:
-                pos_x = int(floor(self.trackers[individual].meas_now[0][0]))
-                pos_y = int(floor(self.trackers[individual].meas_now[0][1]))
-                try:
-                    roi = frame[int(pos_y- (self.height + self.height/self.zoom)):
-                                pos_y + int(self.height/self.zoom),
-                                int(pos_x -(self.width + self.width/self.zoom)):
-                                pos_x + int(self.width/self.zoom)]
-                    roi = cv2.resize(roi, (int(self.width), int(self.height)))
-                except:
-                    print("Cannot focus frame")
-
-            if ret:
-                return roi
-            else:
-                return frame
-        else:
-            return frame
+        try:
+            pos_x = int(floor(tracktor.meas_now[0][0]))
+            pos_y = int(floor(tracktor.meas_now[0][1]))
+            roi = frame[int(pos_y- (self.height + self.height/self.zoom)):
+                        pos_y + int(self.height/self.zoom),
+                        int(pos_x -(self.width + self.width/self.zoom)):
+                        pos_x + int(self.width/self.zoom)]
+            roi = cv2.resize(roi, (int(self.width), int(self.height)))
+            return (True, roi)
+        except:
+            print("Cannot focus frame")
+            return (False, frame)
+        
 
     def show_all(self, frame, detail=True):
         """
@@ -266,7 +259,7 @@ class VideoCapture:
         ret=True
         for i in range(len(self.trackers)):
             #accumulate tracker's processes onto final frame
-            ret, final = self.process(self.trackers[i], final)
+            ret, final = self.process(final, self.trackers[i])
 
             if ret is True and detail is False:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5,
@@ -277,7 +270,7 @@ class VideoCapture:
         else:
             return frame
 
-    def process(self, tracktor, frame):
+    def process(self, frame, tracktor):
         """
         This function takes a frame, and a tracked individua and performs operations
         on the frame and applies information to the tracktor such as x,y coordinates
