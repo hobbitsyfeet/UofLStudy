@@ -56,7 +56,7 @@ class VideoCapture:
         self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
-        self.zoom = 1
+        self.zoom = self.height/2
 
 
     def play(self):
@@ -232,15 +232,45 @@ class VideoCapture:
             identical to working_number but local
         """
         try:
+            #create point from tracked individual
             pos_x = int(floor(tracktor.meas_now[0][0]))
             pos_y = int(floor(tracktor.meas_now[0][1]))
-            roi = frame[int(pos_y- (self.height + self.height/zoom)):
-                        pos_y + int(self.height/zoom),
-                        int(pos_x -(self.width + self.width/zoom)):
-                        pos_x + int(self.width/zoom)]
-            
-            #roi = cv2.resize(roi, (int(self.width), int(self.height)))
+
+            """
+            This works with muliply zoom based on dimensions
+            scale(from=10, to=0) #x10 zoom
+            It works, can't explain how. Numbers dont make sense.
+            """
+            # roi = frame[int(pos_y- (self.height + self.height/zoom)):
+            #             pos_y + int(self.height/zoom),
+            #             int(pos_x -(self.width + self.width/zoom)):
+            #             pos_x + int(self.width/zoom)]
+
+            """
+            This works with number of pixels based on dimensions
+            scale(from=self.height/20, to(self.height)) #20 times zoom
+            It's easier to visualize concept, and numbers actually make sense.
+            """
+            # #calculate edges based on points
+            min_x = int(pos_x - zoom)
+            max_x = int(pos_x + zoom)
+            min_y = int(pos_y - zoom)
+            max_y = int(pos_y + zoom)
+
+            # #limit zoom to video edge
+            if min_x < 0:
+                min_x = 0
+            if max_x > self.width:
+                max_x = int(self.width)
+            if min_y < 0:
+                min_y = 0
+            if max_y > self.height:
+                max_y = int(self.height)
+
+            #region of interest
+            roi = frame[min_y:max_y, min_x:max_x]
             return (True, roi)
+
         except:
             print("Cannot focus frame")
             return (True, frame)

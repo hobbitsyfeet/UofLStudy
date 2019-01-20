@@ -312,7 +312,7 @@ class Tracktor():
             self.meas_now = [x for (y, x) in sorted(zip(reordered, self.meas_now))]
 
         for i in range(1):
-            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 5, self.colour, -1, cv2.LINE_AA)
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]),3, self.colour, -1, cv2.LINE_AA)
 
 
             #circle for area (A = pi*r^2) => r = sqrt(A/pi)

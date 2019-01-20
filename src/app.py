@@ -24,14 +24,18 @@ class App:
         self.window = window
         self.window.title(window_title)
 
-        self.window_width = 720
-        self.window_height = 480
+
+        self.window_width = 1080
+        self.window_height = 720
         self.number_of_trackers = 1
 
         self.menu = tkinter.Menu(window)
         window.config(menu= self.menu)
 
         self.load_file()
+
+        # self.window_width = self.vid.width
+        # self.window_height = self.vid.height
 
         self.setup_menu()
 
@@ -93,8 +97,10 @@ class App:
 
         self.zoom_label = ttk.Label(text="Zoom")
         self.zoom_label.grid(row=0, column=5,sticky="S")
-        self.zoom_bar = ttk.Scale(from_=10, to=1, command=self.vid.set_zoom, orient=tkinter.VERTICAL)
+        #can zoom in 20 times
+        self.zoom_bar = ttk.Scale(from_=self.vid.height/20, to=self.vid.height, command=self.vid.set_zoom, orient=tkinter.VERTICAL)
         self.zoom_bar.config(length=self.window_height)
+        self.zoom_bar.config(value = self.vid.zoom)
         self.zoom_bar.grid(row=1, column=5)
 
         #buttons for videos
@@ -177,7 +183,7 @@ class App:
         if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(self.vid.working_number)
-            frame = cv2.resize(frame, (self.window_width, self.window_height), cv2.INTER_CUBIC)
+            frame = cv2.resize(frame, (int(self.window_width), int(self.window_height)), cv2.INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text="Frame:" + str(int(self.vid.current_frame)))
