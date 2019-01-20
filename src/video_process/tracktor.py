@@ -158,6 +158,17 @@ class Tracktor():
                     del contours[i]
                     continue
 
+
+            #if there exists a last position (x)
+            elif self.meas_last[0][0]:
+                #determine the distance from our last point to all contours
+                dist = cv2.pointPolygonTest(contours[i], (self.meas_last[0][0], self.meas_last[0][1]), True)
+                #delete all contours that exist outside max_area
+                max_radius = int(np.sqrt(self.max_area/np.pi))
+                if abs(dist) > max_radius:
+                    del contours[i]
+                    continue
+
             area = cv2.contourArea(contours[i])
             if area < self.min_area or area > self.max_area:
                 del contours[i]
@@ -242,9 +253,9 @@ class Tracktor():
         """
         self.meas_last = np.array(self.meas_last)
         self.meas_now = np.array(self.meas_now)
-        if self.meas_now.shape !=self.meas_last.shape:
+        if self.meas_now.shape != self.meas_last.shape:
             if self.meas_now.shape[0] < self.meas_last.shape[0]:
-                while self.meas_now.shape[0] !=self.meas_last.shape[0]:
+                while self.meas_now.shape[0] != self.meas_last.shape[0]:
                    self.meas_last = np.delete(self.meas_last, self.meas_last.shape[0]-1, 0)
             else:
                 result = np.zeros(self.meas_now.shape)
@@ -317,7 +328,7 @@ class Tracktor():
 
         return final
 
-    def reject_outliers(data, m):
+    def reject_outliers(self, data, m):
         """
         This function removes any outliers from presented data.
 
