@@ -206,16 +206,19 @@ class VideoCapture:
             #set the current frame number to the frame we just received
             self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             if tracking == self.NO_TRACKING:
-                return (ret, frame)
+                return (True, frame)
             elif tracking == self.TRACK_ALL:
-                frame = self.show_all(frame)
+                ret, final = self.show_all(frame)
 
             elif tracking != self.TRACK_ALL:
-                    ret, frame = self.process(frame, self.trackers[tracking])
-                    ret, frame = self.get_focused_frame(frame, self.trackers[tracking], self.zoom)
+                    ret, final = self.process(frame, self.trackers[tracking])
+                    if self.zoom > 1:
+                        ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
         if ret:
             #when we retreive a new frame, we can assume we updated values with it
-            return (ret, frame)
+            return (ret, final)
+        else:
+            return(True, frame)
 
     def get_focused_frame(self, frame, tracktor, zoom):
         """
@@ -240,7 +243,7 @@ class VideoCapture:
             return (True, roi)
         except:
             print("Cannot focus frame")
-            return (False, frame)
+            return (True, frame)
         
 
     def show_all(self, frame, detail=True):
@@ -267,9 +270,9 @@ class VideoCapture:
                            self.trackers[i].colour, -1, cv2.LINE_AA)
 
         if ret is True and detail is True:
-            return final
+            return (True, final)
         else:
-            return frame
+            return (True, frame)
 
     def process(self, frame, tracktor):
         """
