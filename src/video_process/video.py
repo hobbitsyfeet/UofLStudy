@@ -235,7 +235,8 @@ class VideoCapture:
                         pos_y + int(self.height/zoom),
                         int(pos_x -(self.width + self.width/zoom)):
                         pos_x + int(self.width/zoom)]
-            roi = cv2.resize(roi, (int(self.width), int(self.height)))
+            
+            #roi = cv2.resize(roi, (int(self.width), int(self.height)))
             return (True, roi)
         except:
             print("Cannot focus frame")
