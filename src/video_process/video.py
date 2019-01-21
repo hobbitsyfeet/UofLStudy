@@ -236,21 +236,6 @@ class VideoCapture:
             pos_x = int(floor(tracktor.meas_now[0][0]))
             pos_y = int(floor(tracktor.meas_now[0][1]))
 
-            """
-            This works with muliply zoom based on dimensions
-            scale(from=10, to=0) #x10 zoom
-            It works, can't explain how. Numbers dont make sense.
-            """
-            # roi = frame[int(pos_y- (self.height + self.height/zoom)):
-            #             pos_y + int(self.height/zoom),
-            #             int(pos_x -(self.width + self.width/zoom)):
-            #             pos_x + int(self.width/zoom)]
-
-            """
-            This works with number of pixels based on dimensions
-            scale(from=self.height/20, to(self.height)) #20 times zoom
-            It's easier to visualize concept, and numbers actually make sense.
-            """
             # #calculate edges based on points
             min_x = int(pos_x - zoom)
             max_x = int(pos_x + zoom)
@@ -259,24 +244,25 @@ class VideoCapture:
 
             #keeping aspect ratio solves constant oblongness
             original_aspect = self.width/self.height
-            new_aspect = (max_x - min_x)/(max_y - min_y)
+            zoomed_aspect = (max_x - min_x)/(max_y - min_y)
 
             #difference between ratios needed to change
-            adjust_aspect = new_aspect - original_aspect
+            adjust_aspect = zoomed_aspect - original_aspect
+
+            #ratio is applied to current height
+            adjust_height = (max_y - min_y) * adjust_aspect
+            #ratio is applied to current width
+            adjust_width = (max_x - min_x) * adjust_aspect
 
             #when height ratio is off
-            if original_aspect > new_aspect:
-                #ratio is applied to current height
-                adjust_height = (max_y - min_y) * adjust_aspect
+            if original_aspect > zoomed_aspect:
                 #subtract half the ammount needed to meet original aspect
                 min_y = int(min_y - (adjust_height/2))
                 #add half the ammount needed to meet original aspect
                 max_y = int(max_y + (adjust_height/2))
 
             #when width ratio is off
-            elif original_aspect < new_aspect:
-                #ratio is applied to current width
-                adjust_width = (max_x - min_x) * adjust_aspect
+            elif original_aspect < zoomed_aspect:
                 #subtract half the ammount needed to meet original aspect
                 min_x = int(min_x - (adjust_width/2))
                 #add half the ammount needed to meet original aspect
