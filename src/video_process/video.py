@@ -3,6 +3,7 @@ from math import floor
 import cv2
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 
 from video_process.tracktor import Tracktor
 
@@ -212,8 +213,7 @@ class VideoCapture:
 
             elif tracking != self.TRACK_ALL:
                 ret, final = self.process(frame, self.trackers[tracking])
-                if self.zoom > 1:
-                    ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
+                ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
         if ret:
             #when we retreive a new frame, we can assume we updated values with it
             return (ret, final)
@@ -257,6 +257,32 @@ class VideoCapture:
             min_y = int(pos_y - zoom)
             max_y = int(pos_y + zoom)
 
+            #keeping aspect ratio solves constant oblongness
+            original_aspect = self.width/self.height
+            new_aspect = (max_x - min_x)/(max_y - min_y)
+
+            #difference between ratios needed to change
+            adjust_aspect = new_aspect - original_aspect
+
+            #when height ratio is off
+            if original_aspect > new_aspect:
+                #ratio is applied to current height
+                adjust_height = (max_y - min_y) * adjust_aspect
+                #subtract half the ammount needed to meet original aspect
+                min_y = int(min_y - (adjust_height/2))
+                #add half the ammount needed to meet original aspect
+                max_y = int(max_y + (adjust_height/2))
+
+            #when width ratio is off
+            elif original_aspect < new_aspect:
+                #ratio is applied to current width
+                adjust_width = (max_x - min_x) * adjust_aspect
+                #subtract half the ammount needed to meet original aspect
+                min_x = int(min_x - (adjust_width/2))
+                #add half the ammount needed to meet original aspect
+                max_x = int(max_x + (adjust_width/2))
+            
+            # NOTE: CAUSE OF DISTORTION, we need the outer edge to stop moving as well
             # #limit zoom to video edge
             if min_x < 0:
                 min_x = 0
@@ -269,6 +295,7 @@ class VideoCapture:
 
             #region of interest
             roi = frame[min_y:max_y, min_x:max_x]
+            # cv2.imshow("resize", roi)
             return (True, roi)
 
         except:
