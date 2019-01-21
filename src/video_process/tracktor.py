@@ -1,32 +1,34 @@
+
+from time import time
+import random
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import cv2
-import sys
+#import sys
 from sklearn.cluster import KMeans
 from scipy.optimize import linear_sum_assignment
 from scipy.spatial.distance import cdist
-import random
+
 #from random import randrange, seed
-from time import time
+
 
 class Tracktor():
-    def __init__(self, 
-        s_id ="NO_ID", 
-        colour = None, 
-        block_size = 51, offset = 20, 
-        min_area = 100, max_area = 5000, 
-        scaling = 1.0
-        ):
+    def __init__(self,
+                 id="NO_ID",
+                 colour=None,
+                 block_size=51, offset=20,
+                 min_area=100, max_area=5000,
+                 scaling=1.0
+                 ):
 
         # colours is a vector of BGR values which are used to identify individuals in the video
-        # s_id is spider id and is also used for individual identification
-        # since we only have two individuals, the program will only use the first two elements from these arrays (s_id and colours)
+        # id is spider id and is also used for individual identification
         # number of elements in colours should be greater than n_inds (THIS IS NECESSARY FOR VISUALISATION ONLY)
-        # number of elements in s_id should be greater than n_inds (THIS IS NECESSARY TO GET INDIVIDUAL-SPECIFIC DATA)
+        # number of elements in id should be greater than n_inds (THIS IS NECESSARY TO GET INDIVIDUAL-SPECIFIC DATA)
 
         #where each tracktor takes care of one individual, we do not need this.
         #self.n_inds = n_inds
-        self.s_id = s_id
+        self.id = id
         if colour is None:
             random.seed(time())
             colour = (random.randrange(0, 255, 1), random.randrange(0, 255, 1), random.randrange(0, 255, 1))
@@ -59,6 +61,7 @@ class Tracktor():
         # using this will enable k-means clustering to force n_inds number of animals
         self.mot = False
 
+        #List of data for pandas dataframe
         df = []
 
         codec = 'DIVX' # try other codecs if the default doesn't work ('DIVX', 'avc1', 'XVID') note: this list is non-exhaustive
@@ -177,13 +180,13 @@ class Tracktor():
                 cv2.drawContours(final, contours, i, (0, 0, 255), 1)
                 M = cv2.moments(contours[i])
                 if M['m00'] != 0:
-                	cx = M['m10']/M['m00']
-                	cy = M['m01']/M['m00']
+                    contour_x = M['m10']/M['m00']
+                    contour_y = M['m01']/M['m00']
                 else:
-                	cx = 0
-                	cy = 0
+                    contour_x = 0
+                    contour_y = 0
 
-                self.meas_now.append([cx, cy])
+                self.meas_now.append([contour_x, contour_y])
                 i += 1
         self.clicked = (-1, -1)
         return final, contours
@@ -217,7 +220,7 @@ class Tracktor():
         myarray = np.vstack(contours)
         myarray = myarray.reshape(myarray.shape[0], myarray.shape[2])
 
-        kmeans = KMeans(n_clusters=1, random_state=0, n_init = 50).fit(myarray)
+        kmeans = KMeans(n_clusters=1, random_state=0, n_init=50).fit(myarray)
         l = len(kmeans.cluster_centers_)
 
         for i in range(l):
@@ -306,21 +309,24 @@ class Tracktor():
         """
         # Reorder contours based on results of the hungarian algorithm
         equal = np.array_equal(col_ind, list(range(len(col_ind))))
-        if equal == False:
+        if equal is False:
             current_ids = col_ind.copy()
-            reordered = [i[0] for i in sorted(enumerate(current_ids), key=lambda x:x[1])]
+            reordered = [i[0] for i in sorted(enumerate(current_ids), key=lambda x: x[1])]
             self.meas_now = [x for (y, x) in sorted(zip(reordered, self.meas_now))]
 
         for i in range(1):
-            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]),3, self.colour, -1, cv2.LINE_AA)
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), 3,
+                       self.colour, -1, cv2.LINE_AA)
 
 
             #circle for area (A = pi*r^2) => r = sqrt(A/pi)
             min_radius = int(np.sqrt(self.min_area/np.pi))
-            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, (255, 255, 255), 1, cv2.LINE_AA)
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), min_radius, 
+                       (255, 255, 255), 1, cv2.LINE_AA)
 
             max_radius = int(np.sqrt(self.max_area/np.pi))
-            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, (0, 0, 255), 1, cv2.LINE_AA)
+            cv2.circle(final, tuple([int(x) for x in self.meas_now[i]]), max_radius, 
+                       (0, 0, 255), 1, cv2.LINE_AA)
 
         # add frame number
         font = cv2.FONT_HERSHEY_SCRIPT_SIMPLEX

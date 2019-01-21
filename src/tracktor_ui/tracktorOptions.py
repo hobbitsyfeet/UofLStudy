@@ -41,7 +41,7 @@ class Databar:
 
     def set(self, value):
         """
-        Assigns value from scale according to the name of the Databar 
+        Assigns value from scale according to the name of the Databar
 
         NOTE: REVISE HOW ITS DONE
 
@@ -51,10 +51,10 @@ class Databar:
             value to assign tracktor variables
         """
         #check the name if we are tracking a new individual, if so set our object
-        if self.object.s_id != self.vid.trackers[self.vid.working_number].s_id:
+        if self.object.id != self.vid.trackers[self.vid.working_number].id:
 
             self.object = self.vid.trackers[self.vid.working_number]
-            print (self.object.s_id)
+            print(self.object.id)
 
         #floor the value to suit the numbers being used
         value = floor(float(value))
@@ -73,7 +73,7 @@ class Databar:
     def get(self):
         """
         Returns a value according to the name of the Databar
-        
+
         NOTE: REVISE HOW ITS DONE
 
         Returns
@@ -92,5 +92,8 @@ class Databar:
         return value
 
     def update(self):
-        self.scale.config(value = self.get())
+        """
+        Updates the scale bar position with the data
+        """
+        self.scale.config(value=self.get())
         self.scale_data.config(text=self.get())

@@ -30,7 +30,7 @@ class App:
         self.number_of_trackers = 1
 
         self.menu = tkinter.Menu(window)
-        window.config(menu= self.menu)
+        window.config(menu=self.menu)
 
         self.load_file()
 
@@ -43,7 +43,7 @@ class App:
 
         self.setup_video_functions()
 
-        # After it is called once, the update method will be automatically called every delay milliseconds
+        #delay between update in milliseconds
         self.delay = 15
 
         #initialize update, this keeps looping as mainloop is called
@@ -55,8 +55,11 @@ class App:
         This creates a tkinter canvas for the video to display in.
         It also defines the cursor and cursor function.
         """
-        # Create a canvas that can fit the above video source size, and inside the canvas change to crosshair
-        canvas = tkinter.Canvas(self.window, width=self.window_width, height=self.window_height, cursor="crosshair")
+        # Create a canvas that can fit the above video source size, assign crosshair
+        canvas = tkinter.Canvas(self.window,
+                                width=self.window_width, height=self.window_height,
+                                cursor="crosshair"
+                                )
         canvas.bind("<Button-1>", self.callback1)
         canvas.grid(column=0, columnspan=5, row=1, ipady=1)
         return canvas
@@ -91,26 +94,28 @@ class App:
         self.frame_label.grid(row=3, column=6, sticky="W")
 
         #frame_bar is a scale to the length of the video, controlling which frame the video shows
-        self.frame_bar  = ttk.Scale(from_=0, to=self.vid.length - 1, command=self.vid.set_frame)
+        self.frame_bar = ttk.Scale(from_=0, to=self.vid.length - 1, command=self.vid.set_frame)
         self.frame_bar.config(length=self.window_width)
         self.frame_bar.grid(row=3, column=1, columnspan=3)
 
         self.zoom_label = ttk.Label(text="Zoom")
-        self.zoom_label.grid(row=0, column=5,sticky="S")
+        self.zoom_label.grid(row=0, column=5, sticky="S")
         #can zoom in 20 times
-        self.zoom_bar = ttk.Scale(from_=self.vid.height/20, to=self.vid.height, command=self.vid.set_zoom, orient=tkinter.VERTICAL)
+        self.zoom_bar = ttk.Scale(from_=self.vid.height/20, to=self.vid.height, 
+                                  command=self.vid.set_zoom, orient=tkinter.VERTICAL)
         self.zoom_bar.config(length=self.window_height)
-        self.zoom_bar.config(value = self.vid.zoom)
+        self.zoom_bar.config(value=self.vid.zoom)
         self.zoom_bar.grid(row=1, column=5)
 
         #buttons for videos
         self.play = ttk.Button(self.window, text="Play", command=self.vid.play)
-        self.play.grid(row = 2, column=0, sticky="E")
+        self.play.grid(row=2, column=0, sticky="E")
 
         self.pause_btn = ttk.Button(self.window, text="Pause", command=self.vid.pause)
         self.pause_btn.grid(row=2, column=1, sticky="W")
 
-        self.nudge_left = ttk.Button(self.window, text="<", command=self.vid.previous_frame, width=2)
+        self.nudge_left = ttk.Button(self.window, text="<",
+                                     command=self.vid.previous_frame, width=2)
         self.nudge_left.grid(row=3, column=0, sticky="E")
 
         self.nudge_right = ttk.Button(self.window, text=">", command=self.vid.next_frame, width=2)
@@ -118,7 +123,7 @@ class App:
 
         # Add a grid for dropdown
         self.mainframe = tkinter.Frame(self.window)
-        self.mainframe.grid(row=0, column=0, sticky="NW" )
+        self.mainframe.grid(row=0, column=0, sticky="NW")
         self.mainframe.columnconfigure(5)
         self.mainframe.rowconfigure(5)
 
@@ -133,9 +138,9 @@ class App:
             self.create_tracker()
 
         #setup the menu
-        self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
+        self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         tkinter.Label(self.mainframe, text="Tracked Individual").grid(row=0, column=0)
-        self.popupMenu.grid(row=1, column=0)
+        self.popup_menu.grid(row=1, column=0)
 
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
 
@@ -166,7 +171,7 @@ class App:
         the interface based on the data at hand. (IE sliders change data, and if
         the tracker is changed to another individual, change the sliders to match)
 
-        It continually receives a processed frame and displays it, then 
+        It continually receives a processed frame and displays it, then
         calls itself after a delay. (This is the form Tkinter is designed for)
         """
         #set working number to the selected individual from the dropdown menu
@@ -183,7 +188,9 @@ class App:
         if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(self.vid.working_number)
-            frame = cv2.resize(frame, (int(self.window_width), int(self.window_height)), cv2.INTER_CUBIC)
+            frame = cv2.resize(frame,
+                               (int(self.window_width), int(self.window_height)),
+                               cv2.INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text="Frame:" + str(int(self.vid.current_frame)))
@@ -191,7 +198,7 @@ class App:
             #if the return for a frame is true
             if ret:
                 #set the canvas to the frame image
-                self.photo=ImageTk.PhotoImage(image=Image.fromarray(frame))
+                self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
 
         #after a certain time, update to the next frame if play is true
@@ -200,9 +207,9 @@ class App:
 
     def callback1(self, event):
         """
-        This function calculates the x and y coordinates based on 
+        This function calculates the x and y coordinates based on
         the location clicked on the canvas, and maps it according to
-        the resolution of the video. 
+        the resolution of the video.
 
         It then assignes the location to the tracktor object, allowing it
         to detect and delete all contours but the one the point exists in.
@@ -229,27 +236,27 @@ class App:
         A simple function that sets the position of the frame bar
         based on the current frame.
         """
-        self.frame_bar.config(value = self.vid.current_frame)
+        self.frame_bar.config(value=self.vid.current_frame)
 
     def create_tracker(self):
         """
         This function adds a tracktor object to the tracker list (appended).
         The name is displayed on the popup menu(NOID when initialized),
-        and then creates a new popup menu with the new data. 
+        and then creates a new popup menu with the new data.
 
-        NOTE: THIS FUNCTION NEEDS TO BE ABLE TO CHANGE NAME, 
-        AND BE UPDATED WITHOUT CREATING A NEW MENU EVERY TIME 
+        NOTE: THIS FUNCTION NEEDS TO BE ABLE TO CHANGE NAME,
+        AND BE UPDATED WITHOUT CREATING A NEW MENU EVERY TIME
         """
         #add a tracker in the video
         self.vid.add_tracker()
         index = len(self.vid.trackers)-1
         #add value to NO_ID
-        self.vid.trackers[index].s_id += str(index)
-        self.choices.append(self.vid.trackers[index].s_id)
+        self.vid.trackers[index].id += " " + str(index)
+        self.choices.append(self.vid.trackers[index].id)
         #set the initial value
-        self.tkvar.set(self.vid.trackers[0].s_id) # set the default option
-        self.popupMenu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        self.popupMenu.grid(row=1, column =0)
+        self.tkvar.set(self.vid.trackers[0].id) # set the default option
+        self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
+        self.popup_menu.grid(row=1, column=0)
 
     def save_profile(self):
         """

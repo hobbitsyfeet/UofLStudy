@@ -115,14 +115,14 @@ class VideoCapture:
     #search the list of trackers by name and return -1 if not fouond
     def find_tracker_index_by_id(self, name):
         """
-        Finds the index in trackers where the name matches the tracktor's s_id.
+        Finds the index in trackers where the name matches the tracktor's id.
         Parameters
         ----------
         name: string
-            compared to the tracktor's s_id
+            compared to the tracktor's id
         """
         for i in range(len(self.trackers)):
-            if name == self.trackers[i].s_id:
+            if name == self.trackers[i].id:
                 return i
         return -1
 
@@ -211,9 +211,9 @@ class VideoCapture:
                 ret, final = self.show_all(frame)
 
             elif tracking != self.TRACK_ALL:
-                    ret, final = self.process(frame, self.trackers[tracking])
-                    if self.zoom > 1:
-                        ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
+                ret, final = self.process(frame, self.trackers[tracking])
+                if self.zoom > 1:
+                    ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
         if ret:
             #when we retreive a new frame, we can assume we updated values with it
             return (ret, final)
@@ -274,7 +274,6 @@ class VideoCapture:
         except:
             print("Cannot focus frame")
             return (True, frame)
-        
 
     def show_all(self, frame, detail=True):
         """
@@ -290,7 +289,7 @@ class VideoCapture:
         """
         #iterate through all
         final = frame
-        ret=True
+        ret = True
         for i in range(len(self.trackers)):
             #accumulate tracker's processes onto final frame
             ret, final = self.process(final, self.trackers[i])
@@ -299,7 +298,7 @@ class VideoCapture:
                 cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5,
                            self.trackers[i].colour, -1, cv2.LINE_AA)
 
-        if ret is True and detail is True:
+        if detail is True:
             return (True, final)
         else:
             return (True, frame)
@@ -335,7 +334,7 @@ class VideoCapture:
                 pos_x = tracktor.meas_now[0][0]
                 pos_y = tracktor.meas_now[0][1]
             else:
-                print("Unable to track " + tracktor.s_id)
+                print("Unable to track " + tracktor.id)
 
             #from our current frame, draw contours and display it on final frame
             final, contours = tracktor.detect_and_draw_contours(frame, thresh)
@@ -343,7 +342,7 @@ class VideoCapture:
             #detect if the tracker is changed
             changed = self.tracker_changed(pos_x, pos_y, contours)
             if changed is True:
-                print(tracktor.s_id + "has changed")
+                print(tracktor.id + "has changed")
 
             row_ind, col_ind = tracktor.hungarian_algorithm()
 
@@ -353,7 +352,6 @@ class VideoCapture:
         except:
             return (False, frame)
 
-        
 
     def tracker_changed(self, pos_x, pos_y, contours):
         """
@@ -442,7 +440,7 @@ class VideoCapture:
                                                     ])
                 #we received bad data and cannot process it. return -1
                 except:
-                    print("Could not get location from " + self.trackers[i].s_id +
+                    print("Could not get location from " + self.trackers[i].id +
                           " at frame " + str(self.current_frame)
                          )
                     self.trackers[i].df.append([self.current_frame, -1, -1])
@@ -451,12 +449,12 @@ class VideoCapture:
         print("Starting to export....")
         #once done processing the video (last frame complete), export to file
         for i in range(len(self.trackers)):
-            print("Exporting: " + self.trackers[i].s_id)
+            print("Exporting: " + self.trackers[i].id)
             #load our data into a pandas dataframe
             self.trackers[i].df = pd.DataFrame(np.matrix(self.trackers[i].df),
                                                columns=['frame', 'pos_x', 'pos_y'])
             #export the data into a csv file
-            self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].s_id + ".csv")
+            self.trackers[i].df.to_csv(self.output_path + "csv/" + self.trackers[i].id + ".csv")
 
     # Release the video source when the object is destroyed
     def __del__(self):
