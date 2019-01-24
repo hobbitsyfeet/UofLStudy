@@ -274,11 +274,22 @@ class VideoCapture:
             #create point from tracked individual
             pos_x = int(floor(tracktor.meas_now[0][0]))
             pos_y = int(floor(tracktor.meas_now[0][1]))
+            min_y = int(pos_y - (self.height/zoom))
+            max_y = int(pos_y + (self.height/zoom))
 
-            roi = frame[int(pos_y- (self.height + self.height/zoom)):
-                        pos_y + int(self.height/zoom),
-                        int(pos_x -(self.width + self.width/zoom)):
-                        pos_x + int(self.width/zoom)]
+            min_x = int(pos_x -(self.width/zoom))
+            max_x = pos_x + int(self.width/zoom)
+            if min_y < 0:
+                min_y = 0
+            if min_x < 0:
+                min_x = 0
+            if min_y >= 0 and max_y <= self.height and min_x >= 0 and max_x <= self.width:
+                roi = frame[min_y:max_y,
+                            min_x:max_x]
+                cv2.imshow("resize", roi)
+                return (True, roi)
+            else:
+                return (True, frame)
 
             #roi = cv2.resize(roi, (int(self.width), int(self.height)))
             # # #calculate edges based on points
@@ -316,19 +327,11 @@ class VideoCapture:
   
             # NOTE: CAUSE OF DISTORTION, we need the outer edge to stop moving as well
             # #limit zoom to video edge
-            # if min_x < 0:
-            #     min_x = 0
-            # if max_x > self.width:
-            #     max_x = int(self.width)
-            # if min_y < 0:
-            #     min_y = 0
-            # if max_y > self.height:
-            #     max_y = int(self.height)
+
 
             # # region of interest
             # roi = frame[min_y:max_y, min_x:max_x]
-            cv2.imshow("resize", roi)
-            return (True, roi)
+
 
         except:
             print("Cannot focus frame")
