@@ -49,6 +49,10 @@ class VideoCapture:
         self.working_number = 0
         self.trackers = []
 
+        #a list of tuples with position to track and frame to assign on.
+        self.track_history = []
+
+
         #the path to export the data
         self.output_path = "../output/"
 
@@ -57,8 +61,39 @@ class VideoCapture:
         self.NO_TRACKING = -2
 
         #zoom variable for setting focused frame
-        self.zoom = self.height/2
+        self.zoom = 1
 
+    def create_tracker_pos(self, pos_x, pos_y):
+        """
+        This function creates a new coordinate in history according to current frame
+        """
+        if self.working_number >= 0:
+            location = (pos_x, pos_y, self.working_number, self.current_frame)
+            self.track_history.append(location)
+            print("Adding clicked location to", end="")
+            print(self.track_history[-1])
+
+
+    def delete_tracker_pos(self, frame_number):
+        """
+        This function removes an assignment on a given frame
+        """
+
+    def set_tracker_pos(self, tracktor):
+        """
+        This function sets the tracker position at a given frame
+        """
+        for i in range(len(self.track_history)):
+            #if frame number is equal to set frame ex: (x,y,working_number,frame)
+            if self.current_frame == self.track_history[i][3]:
+                tracktor_index = self.find_tracker_index_by_id(tracktor.id)
+                #if the saved tracktor in the list matches the saved working_number
+                if tracktor_index == self.track_history[i][2]:
+                    #assign that tracktor's clicked to the saved coordinates(x,y)
+                    self.trackers[tracktor_index].clicked = (self.track_history[i][0],
+                                            self.track_history[i][1])
+                    # print("Assigning point from history at:", end="")
+                    # print(self.track_history[i])
 
     def play(self):
         """
@@ -228,60 +263,71 @@ class VideoCapture:
         ----------
         frame: ndarray, shape(n_rows, n_cols, 3)
             source image containing all three colour channels
-        individual: int
-            identical to working_number but local
+        tracktor: tracktor object
+            Contains data and basic functions for tracked individual
+        zoom: int
+            The value in pixels to be zoomed in. 
+            This is the number of pixels to be zoomed in on all sides;
+            the original aspect ratio is adjusted.
         """
         try:
             #create point from tracked individual
             pos_x = int(floor(tracktor.meas_now[0][0]))
             pos_y = int(floor(tracktor.meas_now[0][1]))
 
-            # #calculate edges based on points
-            min_x = int(pos_x - zoom)
-            max_x = int(pos_x + zoom)
-            min_y = int(pos_y - zoom)
-            max_y = int(pos_y + zoom)
+            roi = frame[int(pos_y- (self.height + self.height/zoom)):
+                        pos_y + int(self.height/zoom),
+                        int(pos_x -(self.width + self.width/zoom)):
+                        pos_x + int(self.width/zoom)]
 
-            #keeping aspect ratio solves constant oblongness
-            original_aspect = self.width/self.height
-            zoomed_aspect = (max_x - min_x)/(max_y - min_y)
+            #roi = cv2.resize(roi, (int(self.width), int(self.height)))
+            # # #calculate edges based on points
+            # min_x = int(pos_x - zoom)
+            # max_x = int(pos_x + zoom)
+            # min_y = int(pos_y - zoom)
+            # max_y = int(pos_y + zoom)
 
-            #difference between ratios needed to change
-            adjust_aspect = zoomed_aspect - original_aspect
+            # #keeping aspect ratio solves constant oblongness
+            # original_aspect = self.width/self.height
+            # zoomed_aspect = (max_x - min_x)/(max_y - min_y)
 
-            #ratio is applied to current height
-            adjust_height = (max_y - min_y) * adjust_aspect
-            #ratio is applied to current width
-            adjust_width = (max_x - min_x) * adjust_aspect
+            # print(zoomed_aspect)
+            # #difference between ratios needed to change
+            # adjust_aspect = zoomed_aspect - original_aspect
 
-            #when height ratio is off
-            if original_aspect > zoomed_aspect:
-                #subtract half the ammount needed to meet original aspect
-                min_y = int(min_y - (adjust_height/2))
-                #add half the ammount needed to meet original aspect
-                max_y = int(max_y + (adjust_height/2))
+            # #ratio is applied to current height
+            # adjust_height = (max_y - min_y) * adjust_aspect
+            # #ratio is applied to current width
+            # adjust_width = (max_x - min_x) * adjust_aspect
 
-            #when width ratio is off
-            elif original_aspect < zoomed_aspect:
-                #subtract half the ammount needed to meet original aspect
-                min_x = int(min_x - (adjust_width/2))
-                #add half the ammount needed to meet original aspect
-                max_x = int(max_x + (adjust_width/2))
-            
+            # #when height ratio is off
+            # if original_aspect > zoomed_aspect:
+            #     #subtract half the ammount needed to meet original aspect
+            #     min_y = int(min_y - (adjust_height/2))
+            #     #add half the ammount needed to meet original aspect
+            #     max_y = int(max_y + (adjust_height/2))
+
+            # #when width ratio is off
+            # elif original_aspect < zoomed_aspect:
+            #     #subtract half the ammount needed to meet original aspect
+            #     min_x = int(min_x - (adjust_width/2))
+            #     #add half the ammount needed to meet original aspect
+            #     max_x = int(max_x + (adjust_width/2))
+  
             # NOTE: CAUSE OF DISTORTION, we need the outer edge to stop moving as well
             # #limit zoom to video edge
-            if min_x < 0:
-                min_x = 0
-            if max_x > self.width:
-                max_x = int(self.width)
-            if min_y < 0:
-                min_y = 0
-            if max_y > self.height:
-                max_y = int(self.height)
+            # if min_x < 0:
+            #     min_x = 0
+            # if max_x > self.width:
+            #     max_x = int(self.width)
+            # if min_y < 0:
+            #     min_y = 0
+            # if max_y > self.height:
+            #     max_y = int(self.height)
 
-            #region of interest
-            roi = frame[min_y:max_y, min_x:max_x]
-            # cv2.imshow("resize", roi)
+            # # region of interest
+            # roi = frame[min_y:max_y, min_x:max_x]
+            cv2.imshow("resize", roi)
             return (True, roi)
 
         except:
@@ -336,6 +382,7 @@ class VideoCapture:
         frame: ndarray, shape(n_rows, n_cols, 3)
             source image containing all three colour channels
         """
+        self.set_tracker_pos(tracktor)
         try:
             #eliminate small noise
             thresh = tracktor.colour_to_thresh(frame)
@@ -347,6 +394,7 @@ class VideoCapture:
                 pos_x = tracktor.meas_now[0][0]
                 pos_y = tracktor.meas_now[0][1]
             else:
+                self.pause()
                 print("Unable to track " + tracktor.id)
 
             #from our current frame, draw contours and display it on final frame
@@ -355,6 +403,7 @@ class VideoCapture:
             #detect if the tracker is changed
             changed = self.tracker_changed(pos_x, pos_y, contours)
             if changed is True:
+                self.pause()
                 print(tracktor.id + "has changed")
 
             row_ind, col_ind = tracktor.hungarian_algorithm()

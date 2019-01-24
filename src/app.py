@@ -100,8 +100,8 @@ class App:
 
         self.zoom_label = ttk.Label(text="Zoom")
         self.zoom_label.grid(row=0, column=5, sticky="S")
-        #can zoom in 20 times
-        self.zoom_bar = ttk.Scale(from_=self.vid.height/20, to=self.vid.height, 
+        #can zoom in 15 times
+        self.zoom_bar = ttk.Scale(from_=15, to=1,
                                   command=self.vid.set_zoom, orient=tkinter.VERTICAL)
         self.zoom_bar.config(length=self.window_height)
         self.zoom_bar.config(value=self.vid.zoom)
@@ -134,8 +134,7 @@ class App:
         self.choices.append("NONE")
         self.choices.append("All")
         #add trackers to set number
-        for i in range(self.number_of_trackers):
-            self.create_tracker()
+        self.create_tracker()
 
         #setup the menu
         self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
@@ -228,7 +227,9 @@ class App:
         pos_y = round(event.y * ratio_y)
 
         #self.working_number = self.vid.find_tracker_index_by_id(self.tkvar.get())
-        self.vid.trackers[self.vid.working_number].clicked = (pos_x, pos_y)
+        #self.vid.trackers[self.vid.working_number].clicked = (pos_x, pos_y)
+        self.vid.create_tracker_pos(pos_x, pos_y)
+        self.vid.set_tracker_pos(self.vid.trackers[self.vid.working_number])
         return event.x, event.y
 
     def update_frame_bar(self):
