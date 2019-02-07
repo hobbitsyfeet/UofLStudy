@@ -1,6 +1,6 @@
 
 from time import time
-import random
+from random import randrange, seed
 import numpy as np
 #import pandas as pd
 import cv2
@@ -30,8 +30,8 @@ class Tracktor():
         #self.n_inds = n_inds
         self.id = id
         if colour is None:
-            random.seed(time())
-            colour = (random.randrange(0, 255, 1), random.randrange(0, 255, 1), random.randrange(0, 255, 1))
+            seed(time())
+            colour = (randrange(0, 255, 1), randrange(0, 255, 1), randrange(0, 255, 1))
         self.colour = colour
 
         # this is the block_size and offset used for adaptive thresholding (block_size should always be odd)

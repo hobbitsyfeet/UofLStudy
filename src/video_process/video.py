@@ -3,7 +3,7 @@ from math import floor
 import cv2
 import numpy as np
 import pandas as pd
-import multiprocessing as mp
+#import multiprocessing as mp
 
 from video_process.tracktor import Tracktor
 
@@ -52,6 +52,12 @@ class VideoCapture:
         #a list of tuples with position to track and frame to assign on.
         self.track_history = []
 
+        #List of gps coordinates, possible triangulation
+        self.gps_coord = []
+
+        #Variables to determine size
+        self.cam_distance = 0
+        self.cam_focal_length = 0
 
         #the path to export the data
         self.output_path = "../output/"
@@ -62,6 +68,32 @@ class VideoCapture:
 
         #zoom variable for setting focused frame
         self.zoom = 1
+
+    def draw_gps(self):
+        """
+        Draws the GPS coordinated onto the current frame.
+        If 1 point, draw a circle
+        If 2 points, draw a line and calculate distance
+        If points > 3, draw a polygon and calculate distance of all the edges
+        """
+        pass
+
+    def calculate_location(self, pos_x, pos_y):
+        """
+        Calculates GPS location of a point passed in.
+        Based on the GPS points, the location will calculate distance and direction
+        to find the location. 
+        """
+        pass
+
+    def calculate_size(self, tracktor):
+        """
+        Based on calculated distance of the GPS coordinates, size of the object
+        is calculated. 
+        This should be the distance between the two farthest points (extreme points)
+        Based on pixel length, calculate the related length.
+        """
+        pass
 
     def create_tracker_pos(self, pos_x, pos_y):
         """

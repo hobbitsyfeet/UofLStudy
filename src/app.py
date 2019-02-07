@@ -3,7 +3,7 @@
 import tkinter
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
-import cv2
+from cv2 import resize, INTER_CUBIC
 #local
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
@@ -131,7 +131,10 @@ class App:
         self.tkvar = tkinter.StringVar(self.window)
 
         self.choices = []
-        self.choices.append("NONE")
+        #First value in the list is considered as default
+        self.choices.append("ALL")
+
+        #List of options of choice begins here
         self.choices.append("All")
         #add trackers to set number
         self.create_tracker()
@@ -142,7 +145,6 @@ class App:
         self.popup_menu.grid(row=1, column=0)
 
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
-
                                                   min_value=5, max_value=100,
                                                   row=4, column=1
                                                   )
@@ -187,9 +189,9 @@ class App:
         if self.vid.current_frame < self.vid.length:
             #track individual
             ret, frame = self.vid.get_frame(self.vid.working_number)
-            frame = cv2.resize(frame,
+            frame = resize(frame,
                                (int(self.window_width), int(self.window_height)),
-                               cv2.INTER_CUBIC)
+                               INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text="Frame:" + str(int(self.vid.current_frame)))
@@ -256,6 +258,7 @@ class App:
         self.choices.append(self.vid.trackers[index].id)
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].id) # set the default option
+        self.popup_menu.destroy()
         self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         self.popup_menu.grid(row=1, column=0)
 

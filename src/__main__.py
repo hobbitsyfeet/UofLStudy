@@ -1,10 +1,10 @@
-import tkinter
+from tkinter import Tk
 import app
 
 
 if __name__ == "__main__":
  # Create a window and pass it to the Application object
-    app.App(tkinter.Tk(), "Tkinter and OpenCV")
+    app.App(Tk(), "Tkinter and OpenCV")
     ## Start time
     #start = time.time()
 
