@@ -121,6 +121,7 @@ class App:
         self.nudge_right = ttk.Button(self.window, text=">", command=self.vid.next_frame, width=2)
         self.nudge_right.grid(row=3, column=5, sticky="W")
 
+        #START DROPDOWN
         # Add a grid for dropdown
         self.mainframe = tkinter.Frame(self.window)
         self.mainframe.grid(row=0, column=0, sticky="NW")
@@ -143,6 +144,7 @@ class App:
         self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         tkinter.Label(self.mainframe, text="Tracked Individual").grid(row=0, column=0)
         self.popup_menu.grid(row=1, column=0)
+        #END DROPDOWN
 
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
                                                   min_value=5, max_value=100,
@@ -160,11 +162,7 @@ class App:
                                                     min_value=1, max_value=5000,
                                                     row=7, column=1
                                                     )
-    # on change dropdown value
-    # def change_dropdown(*args):
-    #     pass
-    #     # link function to change dropdown
-    #     self.tkvar.trace(change_dropdown)
+
 
     def update(self):
         """

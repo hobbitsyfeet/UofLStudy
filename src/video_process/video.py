@@ -55,9 +55,12 @@ class VideoCapture:
         #List of gps coordinates, possible triangulation
         self.gps_coord = []
 
-        #Variables to determine size
+        #Ground Sample Distance variables
         self.cam_distance = 0
         self.cam_focal_length = 0
+        self.cam_sensor_width = 0
+        self.cam_sensor_height = 0
+
 
         #the path to export the data
         self.output_path = "../output/"
@@ -82,14 +85,14 @@ class VideoCapture:
         """
         Calculates GPS location of a point passed in.
         Based on the GPS points, the location will calculate distance and direction
-        to find the location. 
+        to find the location.
         """
         pass
 
     def calculate_size(self, tracktor):
         """
         Based on calculated distance of the GPS coordinates, size of the object
-        is calculated. 
+        is calculated.
         This should be the distance between the two farthest points (extreme points)
         Based on pixel length, calculate the related length.
         """
