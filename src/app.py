@@ -256,7 +256,6 @@ class App:
         self.choices.append(self.vid.trackers[index].id)
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].id) # set the default option
-        self.popup_menu.destroy()
         self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
         self.popup_menu.grid(row=1, column=0)
 
