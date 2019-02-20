@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SAGA_METADATA>
+  <HISTORY>
+    <MODULE>Add Coordinates to points</MODULE>
+    <DATA type="shapes" id="INPUT" name="Points">
+      <FILE>C:/Users/t-work/Desktop/GIS/lethbridge/goPro_cottonwood_UTM.shp</FILE>C:/Users/t-work/Desktop/GIS/lethbridge/goPro_cottonwood_UTM.shp</DATA>
+  </HISTORY>
+  <SOURCE>
+    <FILE>C:/Users/t-work/Desktop/GIS/lethbridge/Cottonwood_UTM.shp</FILE>
+    <DATABASE></DATABASE>
+    <PROJECTION>
+      <OGC_WKT>PROJCS["WGS_1984_UTM_Zone_12N",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["Degree",0.017453292519943295]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",-111],PARAMETER["scale_factor",0.9996],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["Meter",1]]</OGC_WKT>
+      <PROJ4>+proj=tmerc +a=6378137.000000 +b=6356752.314245 +lat_0=0 +lon_0=-111 +k_0=0.9996 +x_0=500000 +y_0=0 +no_defs</PROJ4>
+      <EPSG>-1</EPSG>
+    </PROJECTION>
+  </SOURCE>
+  <DESCRIPTION></DESCRIPTION>
+</SAGA_METADATA>
