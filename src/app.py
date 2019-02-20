@@ -43,6 +43,8 @@ class App:
 
         self.setup_video_functions()
 
+        self.setup_databars(row=4, col=2)
+
         #delay between update in milliseconds
         self.delay = 15
 
@@ -122,12 +124,6 @@ class App:
         self.nudge_right.grid(row=3, column=5, sticky="W")
 
         #START DROPDOWN
-        # Add a grid for dropdown
-        self.mainframe = tkinter.Frame(self.window)
-        self.mainframe.grid(row=0, column=0, sticky="NW")
-        self.mainframe.columnconfigure(5)
-        self.mainframe.rowconfigure(5)
-
         # Create a Tkinter variable
         self.tkvar = tkinter.StringVar(self.window)
 
@@ -141,26 +137,31 @@ class App:
         self.create_tracker()
 
         #setup the menu
-        self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        tkinter.Label(self.mainframe, text="Tracked Individual").grid(row=0, column=0)
-        self.popup_menu.grid(row=1, column=0)
+        self.popup_menu = ttk.OptionMenu(self.window, self.tkvar, *self.choices)
+        tkinter.Label(self.window, text="Tracked Individual").grid(row=0, column=6)
+        self.popup_menu.grid(row=1, column=6, sticky="N")
         #END DROPDOWN
 
+    def setup_databars(self, row=0, col=0):
+        """
+        A function to setup and set the position of the databars
+        contributing to the manipulation of tracking variables.
+        """
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
-                                                  min_value=5, max_value=100,
-                                                  row=4, column=1
-                                                  )
+                                                min_value=5, max_value=100,
+                                                row=row, column=col
+                                                )
         self.block_size_bar = tracktorOptions.Databar(self.window, self.vid, "Blocksize",
-                                                      min_value=1, max_value=100,
-                                                      row=5, column=1
-                                                      )
+                                                    min_value=1, max_value=100,
+                                                    row=row+1, column=col
+                                                    )
         self.min_area_bar = tracktorOptions.Databar(self.window, self.vid, "MinArea",
                                                     min_value=1, max_value=5000,
-                                                    row=6, column=1
+                                                    row=row+2, column=col
                                                     )
         self.max_area_bar = tracktorOptions.Databar(self.window, self.vid, "MaxArea",
                                                     min_value=1, max_value=5000,
-                                                    row=7, column=1
+                                                    row=row+3, column=col
                                                     )
 
 
@@ -256,8 +257,8 @@ class App:
         self.choices.append(self.vid.trackers[index].id)
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].id) # set the default option
-        self.popup_menu = ttk.OptionMenu(self.mainframe, self.tkvar, *self.choices)
-        self.popup_menu.grid(row=1, column=0)
+        self.popup_menu = ttk.OptionMenu(self.window, self.tkvar, *self.choices)
+        #self.popup_menu.grid(row=1, column=0)
 
     def save_profile(self):
         """
