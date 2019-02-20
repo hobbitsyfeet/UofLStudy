@@ -1,6 +1,7 @@
 """
 This takes the camera's details and uses it to calculate and adjust settings
 """
+import cv2
 
 class camera():
     """
@@ -19,14 +20,14 @@ class camera():
         #calibrate will be a numpy matrix of intrinsic parameters of the camera
         self.calibrated = []
 
-    def calibrate(self):
+    def calibrate(self, vid_dir):
         """
         This will call a reference to a video taken, based on ?camera information?
         and will calibrate the camera and save the results in self.calibrated
         Probably calibrate to default video link
 
         With the calibration we get the distortion coefficients.
-
+        NOTE We use a 5x6 grid
         
         Returns
         -------
