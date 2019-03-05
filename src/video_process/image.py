@@ -10,9 +10,10 @@ class StitchImage():
     """
     Steps to stitching the images
     1) Find Keypoints between images (SIFT/SURF/ORB?)
+     - SIFT and SURF are patented and if you want to use it in a real-world application, you need to pay a licensing fee.
+     - ORB is not.
     2) Compute the distances between every descriptor
-
-    3) Select the best matches to align (Best of 2? feature matcher)
+    3) Select the best matches to align (Knn - 2 best matches for each descriptor {k=2})
     - finds two best matches for each feature and leaves the best one only if the ratio between descriptor distances is greater than the threshold
     4) Estimate Homography (Homography Estimator)
     5) Warp the images (translate and rotate) to align
@@ -22,54 +23,61 @@ class StitchImage():
     """
     def __init__(self):
         pass
-
-    def stitch(self):
+    
+    def registration(self, images):
         """
-        This function takes in the video
-        ----------------
-        Stitcher methods
-        ----------------
-
-        register resolution(0.6)
-        estimation resolution(0.1)
-        compsiting resolution (original resolution)
-        Panorama confidence threshold(1) = certain?
-        seam finder -> graphCutSeamFinder - detail COST COLOR?
-        Blender -> Multiband blender(false)
-        Feature finder (ORB)
-        Interpolation flags -> INTER_LINEAR
-
-        work scale = 1
-        seam scale = 1
-        seam work aspect = 1
-        warped image scale = 1
-
-        ---------------------
-        SCANS stitcher modes.
-        ---------------------
-        estimator -> AffineBasedEstimator
-        wave correction -> False
-        Feature matcher ->best of 2 nearest matcher(false,false)
-        Bundle adjuster -> BundleAdjusterAffinePartial
-        warper -> affine
-        exposureCompensator -> no compensation
-
+        1) resize to medium resolution
+        2) Find Features
+        3) Match Features
+        4) Select images and matches subset to build pano?
+        5) Esimate Camera parameters rough initial guess?
+        6) refine camera parameters globally
+        7) Wave correction and Final scale estimation
+        Return Registration Data.?
         """
-        print("Stitching Frames...")
+        pass
+    def resize(self, percent):
+        pass
 
-        frames = self.collect_frames("./videos/Cap2_2k_Trim.mp4")
-        keypoints, descriptor = self.find_KeyPoints(frames)
-        print(descriptor)
-        # stitcher = cv2.createStitcherScans(True)
-        # stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
-        # status, pano = stitcher.stitch(frames)
+    def find_features(self):
+        pass
+    def match_features(self):
+        pass
+    def camera_estimation(self):
+        pass
+    def refine_estimation(self):
+        pass
+    def wave_correction(self):
+        pass
 
-        # if status != cv2.Stitcher_OK:
-        #     print("Can't stitch images, error code = %d" % status)
-        #     sys.exit(-1)
+    def composit(self, images, regist_data):
+        """
+        1)Resize original image to small resolution
+        2)Warp the image (with regist_data)
+        3)Estimate exposure errors
+        4)Find seam masks
+        5)Resize mask to original resolution
         
-        print("Stitching Successful.")
-        cv2.imwrite("stitched_linear.jpg", scan);
+        6)Warp original image
+        7)Compensate exposure errors with results in step 3
+        8)Using results from step 5 and 7, blend images
+
+        """
+        pass
+
+    def warp_resized(self):
+        pass
+    def exposure_estimation(self):
+        pass
+    def find_seam_mask(self):
+        pass
+    def warp_original(self):
+        pass
+    def compensate_exposure(self):
+        pass
+    def blend_images(self):
+        pass
+    
 
     def collect_frames(self, video_source):
         """
@@ -84,9 +92,9 @@ class StitchImage():
         #setup cv2 capture from video
         cap = cv2.VideoCapture(video_source)
         frames = []
-        frame_skip = 105
+        frame_skip = 100
 
-        while len(frames) < 12:
+        while len(frames) < 20:
             #set current frame to the next n-skipped frames
             cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + frame_skip)
             print(cap.get(cv2.CAP_PROP_POS_FRAMES))
@@ -96,33 +104,11 @@ class StitchImage():
             if ret:
                 if cv2.waitKey(30) & 0xFF == ord('q'):
                     break
-                cv2.imshow('frame', frame)
+                # cv2.imshow('frame', frame)
                 #append the frames to be processed
                 frames.append(frame)
         
         return frames
-    
-    def find_KeyPoints(self, frames):
-        #ORB: An efficient alternative to SIFT or SURF
-        #this creates the parameters to be used
-        orb = cv2.ORB_create()
-        for frame in frames:
-            # find the keypoints with ORB
-            keypoints = orb.detect(frame, None)
-            #compute the descriptors with ORB
-            keypoints, des = orb.compute(frame, keypoints)
-        return keypoints, des
-    
-    def match_Keypoints(self):
-        #cv2.estimateAffinePartial2D()
-        pass
-
-    def reference_frame(self, current_frame):
-        """
-        This function takes the current frame number and finds it's reference to the stitched image
-        """
-        pass
 
 if __name__ == "__main__":
     Image = StitchImage()
-    Image.stitch()
