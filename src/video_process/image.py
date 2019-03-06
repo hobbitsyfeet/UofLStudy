@@ -24,6 +24,13 @@ class StitchImage():
     def __init__(self):
         pass
     
+    def stitch(self, images):
+        print("Stitching images")
+        stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
+        image = stitcher.stitch(images)
+        print(image)
+        return image
+
     def registration(self, images):
         """
         1) resize to medium resolution
@@ -39,10 +46,57 @@ class StitchImage():
     def resize(self, percent):
         pass
 
-    def find_features(self):
-        pass
-    def match_features(self):
-        pass
+    def find_features(self, img1, img2):
+        """
+        This function finds features between 2 images using ORB
+        Desribes keypoints using "steer" BRIEF
+        """
+        orb = cv2.ORB_create()
+        kp1, des1 = orb.detectAndCompute(img1, None)
+        kp2, des2 = orb.detectAndCompute(img2, None)
+        return kp1, kp2, des1, des2
+
+    def match_features(self, des1, des2, mode=0):
+        # 0 = BRUTE FORCE
+        # 1 = BRUTE FORCE HAMMING
+        if mode == 0:
+            # BFMatcher with default params
+            bf = cv2.BFMatcher()
+            matches = bf.knnMatch(des1, des2, k=2)
+            # Apply ratio test
+            good = []
+            for m,n in matches:
+                if m.distance < 0.75*n.distance:
+                    good.append([m])
+            matches = good
+
+        elif mode == 1:
+            # create BFMatcher object with NORM_HAMMING
+            bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+            # Match descriptors.
+            matches = bf.match(des1, des2)
+            # Sort them in the order of their distance.
+            matches = sorted(matches, key=lambda x:x.distance)
+            
+            matches = matches[:20]
+
+        return matches
+
+    def find_homography(self, img1, img2, kp1, kp2, matches):
+        ## extract the matched keypoints
+        # 
+        src_pts  = np.array([kp1[m.queryIdx].pt for m in matches], dtype=np.float32).reshape(-1, 1, 2)
+        dst_pts  = np.array([kp2[m.trainIdx].pt for m in matches], dtype=np.float32).reshape(-1, 1, 2)
+
+        ## find homography matrix and do perspective transform
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+        h,w = img1.shape[:2]
+        pts = np.array([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ], dtype=np.float32).reshape(-1, 1, 2)
+        dst = cv2.perspectiveTransform(pts, M)
+        # dst = cv2.getAffineTransform(pts, M)
+        return dst
+
+
     def camera_estimation(self):
         pass
     def refine_estimation(self):
@@ -92,9 +146,9 @@ class StitchImage():
         #setup cv2 capture from video
         cap = cv2.VideoCapture(video_source)
         frames = []
-        frame_skip = 100
+        frame_skip = 300
 
-        while len(frames) < 20:
+        while len(frames) < 10:
             #set current frame to the next n-skipped frames
             cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + frame_skip)
             print(cap.get(cv2.CAP_PROP_POS_FRAMES))
@@ -104,11 +158,37 @@ class StitchImage():
             if ret:
                 if cv2.waitKey(30) & 0xFF == ord('q'):
                     break
-                # cv2.imshow('frame', frame)
+                cv2.imshow('frame', frame)
                 #append the frames to be processed
                 frames.append(frame)
-        
         return frames
 
 if __name__ == "__main__":
-    Image = StitchImage()
+    processor = StitchImage()
+
+    frames = processor.collect_frames("./videos/GH010018_Trim.mp4")
+    stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
+    status, scan = stitcher.stitch(frames)
+
+    if status != cv2.Stitcher_OK:
+         print("Stitching Successful.")
+    cv2.imwrite("./output/stitched.jpg", scan);
+
+    img2 = scan
+    img1 = frames[2]
+    kp1, kp2, des1, des2 = processor.find_features(img1, img2)
+    
+    matches = processor.match_features(des1, des2, mode=1)
+    print(matches)
+
+    try:
+        match_img = cv2.drawMatchesKnn(img1, kp1, img2, kp2, matches, None, flags=2)
+    except:
+        print("draw matches (non-knn)")
+        match_img = cv2.drawMatches(img1, kp1, img2, kp2, matches, None, flags=2)
+
+    dst = processor.find_homography(img1, img2, kp1, kp2, matches)
+    cover_img = cv2.polylines(img2, [np.int32(dst)], True, (0, 0, 255),5, cv2.LINE_AA)
+
+    cv2.imwrite("./output/cover_img2.jpg", cover_img)
+    cv2.imwrite("./output/cover_query.jpg", img1)
