@@ -7,6 +7,7 @@ from cv2 import resize, INTER_CUBIC
 #local
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
+from video_process.image import StitchImage
 
 
 class App:
@@ -24,13 +25,17 @@ class App:
         self.window = window
         self.window.title(window_title)
 
-
         self.window_width = 1080
         self.window_height = 720
         self.number_of_trackers = 1
 
         self.menu = tkinter.Menu(window)
         window.config(menu=self.menu)
+
+        """
+        Info used for save/load
+        """
+        self.video = ''
 
         self.load_file()
 
@@ -78,6 +83,9 @@ class App:
         self.file_menu.add_command(label="Open", command=self.load_file)
         self.file_menu.add_command(label="Save", command=self.donothing)
         self.file_menu.add_command(label="Save as...", command=self.donothing)
+
+        self.file_menu.add_command(label="Stitch and Locate...", command=self.Stitch_And_Locate)
+        
         self.file_menu.add_command(label="Export All", command=self.vid.export_all)
         self.file_menu.add_command(label="Close", command=self.donothing)
 
@@ -148,11 +156,11 @@ class App:
         contributing to the manipulation of tracking variables.
         """
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
-                                                min_value=5, max_value=100,
+                                                min_value=5, max_value=200,
                                                 row=row, column=col
                                                 )
         self.block_size_bar = tracktorOptions.Databar(self.window, self.vid, "Blocksize",
-                                                    min_value=1, max_value=100,
+                                                    min_value=1, max_value=200,
                                                     row=row+1, column=col
                                                     )
         self.min_area_bar = tracktorOptions.Databar(self.window, self.vid, "MinArea",
@@ -160,7 +168,7 @@ class App:
                                                     row=row+2, column=col
                                                     )
         self.max_area_bar = tracktorOptions.Databar(self.window, self.vid, "MaxArea",
-                                                    min_value=1, max_value=5000,
+                                                    min_value=1, max_value=10000,
                                                     row=row+3, column=col
                                                     )
 
@@ -258,7 +266,7 @@ class App:
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].id) # set the default option
         self.popup_menu = ttk.OptionMenu(self.window, self.tkvar, *self.choices)
-        #self.popup_menu.grid(row=1, column=0)
+        # self.popup_menu.grid(row=1, column=0)
 
     def save_profile(self):
         """
@@ -280,6 +288,33 @@ class App:
         print(file)
         if file != '':
             self.vid = VideoCapture(file)
+            self.video = file
+    
+    def Stitch_And_Locate(self):
+
+        """
+        stitches the video together
+        """
+        img_process = StitchImage()
+
+        frames = img_process.collect_frames(self.video, 100, 10)
+        status, scan = img_process.stitch(frames)
+        
+        # img_process.find_reference()
+        # stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
+        
+        #scan is the stitched image
+        # status, scan = stitcher.stitch(frames)
+
+        # if status != cv2.Stitcher_OK:
+        #     print("Stitching Successful.")
+        # cv2.imwrite("./output/stitched.jpg", scan);
+
+        
+        
+
+
+
 
     def donothing(self):
         """

@@ -27,9 +27,36 @@ class StitchImage():
     def stitch(self, images):
         print("Stitching images")
         stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
-        image = stitcher.stitch(images)
-        print(image)
-        return image
+        status, scan = stitcher.stitch(images)
+
+        if status != cv2.Stitcher_OK:
+            print("Stitching Successful.")
+
+        cv2.imwrite("./output/stitched.jpg", scan);
+        return status, scan
+
+    def find_reference(self, query_img, train_img):
+
+        #find the common features between the two images
+        kp1, kp2, des1, des2 = processor.find_features(query_img, train_img)
+        
+        #match the features
+        matches = processor.match_features(des1, des2, mode=1)
+
+        '''
+        #draw matches
+        try:
+            match_img = cv2.drawMatchesKnn(query_img, kp1, train_img, kp2, matches, None, flags=2)
+        except:
+            print("draw matches (non-knn)")
+            match_img = cv2.drawMatches(query_img, kp1, train_img, kp2, matches, None, flags=2)
+        '''
+        #find the homography matrix
+        dst = processor.find_homography(query_img, train_img, kp1, kp2, matches)
+
+        #return the pixel values of the lines
+        return [np.int32(dst)]
+
 
     def registration(self, images):
         """
@@ -133,7 +160,7 @@ class StitchImage():
         pass
     
 
-    def collect_frames(self, video_source):
+    def collect_frames(self, video_source, skip, total_frames):
         """
         Collects the images for stitching
         """
@@ -146,11 +173,10 @@ class StitchImage():
         #setup cv2 capture from video
         cap = cv2.VideoCapture(video_source)
         frames = []
-        frame_skip = 300
 
-        while len(frames) < 10:
+        while len(frames) < total_frames:
             #set current frame to the next n-skipped frames
-            cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + frame_skip)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + skip)
             print(cap.get(cv2.CAP_PROP_POS_FRAMES))
 
             #read the image from that skipped frame
@@ -166,29 +192,13 @@ class StitchImage():
 if __name__ == "__main__":
     processor = StitchImage()
 
-    frames = processor.collect_frames("./videos/GH010018_Trim.mp4")
-    stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
-    status, scan = stitcher.stitch(frames)
+    frames = processor.collect_frames("./videos/GH010018_Trim_Trim.mp4", 100, 6)
 
-    if status != cv2.Stitcher_OK:
-         print("Stitching Successful.")
-    cv2.imwrite("./output/stitched.jpg", scan);
-
-    img2 = scan
-    img1 = frames[2]
-    kp1, kp2, des1, des2 = processor.find_features(img1, img2)
-    
-    matches = processor.match_features(des1, des2, mode=1)
-    print(matches)
-
-    try:
-        match_img = cv2.drawMatchesKnn(img1, kp1, img2, kp2, matches, None, flags=2)
-    except:
-        print("draw matches (non-knn)")
-        match_img = cv2.drawMatches(img1, kp1, img2, kp2, matches, None, flags=2)
-
-    dst = processor.find_homography(img1, img2, kp1, kp2, matches)
-    cover_img = cv2.polylines(img2, [np.int32(dst)], True, (0, 0, 255),5, cv2.LINE_AA)
+    status, scan = processor.stitch(frames)
+    points = processor.find_reference(frames[4], scan)
+        #draw the red lines
+    print(points)
+    cover_img = cv2.polylines(scan, points, True, (0, 0, 255),5, cv2.LINE_AA)
 
     cv2.imwrite("./output/cover_img2.jpg", cover_img)
-    cv2.imwrite("./output/cover_query.jpg", img1)
+    cv2.imwrite("./output/query_img.jpg", frames[4])

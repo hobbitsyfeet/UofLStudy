@@ -288,6 +288,7 @@ class VideoCapture:
             #when we retreive a new frame, we can assume we updated values with it
             return (ret, final)
         else:
+            print("unprocessed")
             return(True, frame)
 
     def get_focused_frame(self, frame, tracktor, zoom):
@@ -420,8 +421,9 @@ class VideoCapture:
         frame: ndarray, shape(n_rows, n_cols, 3)
             source image containing all three colour channels
         """
-        self.set_tracker_pos(tracktor)
+        
         try:
+            self.set_tracker_pos(tracktor)
             #eliminate small noise
             thresh = tracktor.colour_to_thresh(frame)
             thresh = cv2.erode(thresh, tracktor.kernel, iterations=1)
@@ -441,7 +443,7 @@ class VideoCapture:
             #detect if the tracker is changed
             changed = self.tracker_changed(pos_x, pos_y, contours)
             if changed is True:
-                self.pause()
+                # self.pause()
                 print(tracktor.id + "has changed")
 
             row_ind, col_ind = tracktor.hungarian_algorithm()
@@ -450,6 +452,7 @@ class VideoCapture:
             final = tracktor.reorder_and_draw(final, col_ind, self.current_frame)
             return (True, final)
         except:
+            print("Cannot Process Frame.")
             return (False, frame)
 
 
@@ -480,18 +483,18 @@ class VideoCapture:
             for contour in contours:
                 #check if previous position exists in updated contour (1= Yes, -1= No)
                 dist = cv2.pointPolygonTest(contour, (pos_x, pos_y), False)
-                #print(dist)
+                # print(dist)
                 #if previous point exists in the same contour, set changed flag to false
                 if dist != -1.0:
                     changed_tracker_flag = False
 
             if changed_tracker_flag is True:
-                #print("changed contours")
+                print("changed contours")
                 return changed_tracker_flag
 
         # if no contours exist, we cannot process anything
         else:
-            #print("Unable to track ")
+            print("Unable to track ")
             return changed_tracker_flag
 
     def export_all(self):
