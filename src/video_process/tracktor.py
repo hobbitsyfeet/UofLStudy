@@ -139,8 +139,8 @@ class Tracktor():
             individual's location on current frame
         """
         # Detect contours and draw them based on specified area thresholds
-        img, contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # img = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
         final = frame.copy()
 
