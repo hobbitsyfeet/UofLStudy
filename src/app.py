@@ -4,6 +4,7 @@ import tkinter
 from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 from cv2 import resize, INTER_CUBIC
+import cv2
 #local
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
@@ -295,22 +296,23 @@ class App:
         """
         stitches the video together
         """
+        print("Stitching image")
         img_process = StitchImage()
 
-        frames = img_process.collect_frames(self.video, 100, 10)
+        frames = img_process.collect_frames(self.video, self.vid.current_frame, 100, 10)
+
         status, scan = img_process.stitch(frames)
         
-        # img_process.find_reference()
-        # stitcher = cv2.Stitcher_create(cv2.Stitcher_SCANS)
-        
-        #scan is the stitched image
-        # status, scan = stitcher.stitch(frames)
+        print("Finding reference")
+        ret, query_frame = self.vid.get_frame(self.vid.NO_TRACKING)
 
-        # if status != cv2.Stitcher_OK:
-        #     print("Stitching Successful.")
-        # cv2.imwrite("./output/stitched.jpg", scan);
+        cv2.imshow("Image", query_frame)
 
-        
+        coordinates = img_process.find_reference(query_frame, scan)
+        print(coordinates)
+
+        cover_img = cv2.polylines(scan, coordinates, True, (0, 0, 255), 5, cv2.LINE_AA)
+        cv2.imwrite("./output/scan.jpg", cover_img)
         
 
 

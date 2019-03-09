@@ -278,6 +278,7 @@ class VideoCapture:
             self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
             if tracking == self.NO_TRACKING:
                 return (True, frame)
+                
             elif tracking == self.TRACK_ALL:
                 ret, final = self.show_all(frame)
 

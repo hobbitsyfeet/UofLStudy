@@ -38,10 +38,10 @@ class StitchImage():
     def find_reference(self, query_img, train_img):
 
         #find the common features between the two images
-        kp1, kp2, des1, des2 = processor.find_features(query_img, train_img)
+        kp1, kp2, des1, des2 = self.find_features(query_img, train_img)
         
         #match the features
-        matches = processor.match_features(des1, des2, mode=1)
+        matches = self.match_features(des1, des2, mode=1)
 
         '''
         #draw matches
@@ -52,7 +52,7 @@ class StitchImage():
             match_img = cv2.drawMatches(query_img, kp1, train_img, kp2, matches, None, flags=2)
         '''
         #find the homography matrix
-        dst = processor.find_homography(query_img, train_img, kp1, kp2, matches)
+        dst = self.find_homography(query_img, train_img, kp1, kp2, matches)
 
         #return the pixel values of the lines
         return [np.int32(dst)]
@@ -160,7 +160,7 @@ class StitchImage():
         pass
     
 
-    def collect_frames(self, video_source, skip, total_frames):
+    def collect_frames(self, video_source, start_frame, skip, total_frames):
         """
         Collects the images for stitching
         """
@@ -173,7 +173,9 @@ class StitchImage():
         #setup cv2 capture from video
         cap = cv2.VideoCapture(video_source)
         frames = []
-
+        #set the starting frame
+        cap.set(cv2.CAP_PROP_POS_FRAMES, (start_frame - (skip * total_frames/2)))
+        print("starting at" + str(cap.get(cv2.CAP_PROP_POS_FRAMES)))
         while len(frames) < total_frames:
             #set current frame to the next n-skipped frames
             cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + skip)
@@ -192,7 +194,7 @@ class StitchImage():
 if __name__ == "__main__":
     processor = StitchImage()
 
-    frames = processor.collect_frames("./videos/GH010018_Trim_Trim.mp4", 100, 6)
+    frames = processor.collect_frames("./videos/GH010018_Trim_Trim.mp4",0, 100, 6)
 
     status, scan = processor.stitch(frames)
     points = processor.find_reference(frames[4], scan)
