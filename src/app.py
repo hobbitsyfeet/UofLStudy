@@ -8,7 +8,8 @@ import cv2
 #local
 from video_process.video import VideoCapture
 from tracktor_ui import tracktorOptions
-from video_process.image import StitchImage
+from locate import Locate
+
 
 
 class App:
@@ -291,52 +292,12 @@ class App:
             self.video = file
     
     def Stitch_And_Locate(self):
-
-        """
-        stitches the video together
-        """
-        print("Stitching image")
-        img_process = StitchImage()
-
-        frames = img_process.collect_frames(self.video, self.vid.current_frame, 100, 10)
-
-        status, scan = img_process.stitch(frames)
-        
-        print("Finding reference")
-        ret, query_frame = self.vid.get_frame(self.vid.NO_TRACKING)
-
-        # cv2.imshow("Image", query_frame)
-
-        coordinates = img_process.find_reference(query_frame, scan)
-        print(coordinates)
-
-        h,w = scan.shape[:2]
-
-        cover_img = cv2.polylines(scan, coordinates, True, (0, 0, 255), 5, cv2.LINE_AA)
-        cv2.imwrite("./output/scan.jpg", cover_img)
-        
-        locate_window = tkinter.Toplevel()
-        locate_window.title("Stitch and Locate")
-       
-        frame=tkinter.Frame(locate_window,width=self.window_width,height=self.window_height)
-        # frame.pack(side=tkinter.LEFT)
-        frame.grid(row=0,column=0)
-        canvas=tkinter.Canvas(frame,width=self.window_width,height=self.window_height, scrollregion=(0,0,w,h),cursor="crosshair")
-        hbar=tkinter.Scrollbar(frame,orient=tkinter.HORIZONTAL)
-        hbar.pack(side=tkinter.BOTTOM,fill=tkinter.X)
-        hbar.config(command=canvas.xview)
-        vbar=tkinter.Scrollbar(frame,orient=tkinter.VERTICAL)
-        vbar.pack(side=tkinter.RIGHT,fill=tkinter.Y)
-        vbar.config(command=canvas.yview)
-        # canvas.config(width=300,height=300)
-        canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        canvas.pack(side=tkinter.LEFT,expand=True,fill=tkinter.BOTH)
-
-        photo = ImageTk.PhotoImage(image=Image.fromarray(scan))
-        canvas.create_image(0,0,image=photo,anchor="nw")
-        
-        locate_window.mainloop()
-
+        ret, frame = self.vid.get_frame(-2)
+        locate_tool = Locate(self.window, self.video)
+        cv2.imshow("FRAME", frame)
+        print(str(self.vid.current_frame) + "!!!!")
+        #first is the frame itself the other is the frame number
+        locate_tool.start(frame, self.vid.current_frame)
 
     def donothing(self):
         """

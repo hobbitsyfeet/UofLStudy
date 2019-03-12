@@ -189,6 +189,7 @@ class StitchImage():
                 cv2.imshow('frame', frame)
                 #append the frames to be processed
                 frames.append(frame)
+        cv2.destroyAllWindows()
         return frames
 
 if __name__ == "__main__":
