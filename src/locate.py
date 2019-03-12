@@ -5,21 +5,22 @@ passed in with a point, we will extract the GPS coordinate from it.
 """
 from video_process.image import StitchImage
 import tkinter
+from tkinter import filedialog
 from PIL import Image, ImageTk
 import cv2
+import pandas as pd
 class Locate():
     def __init__(self, parent, video_source):
         """
-        The parent window is the program that originally calls it. 
+        The parent window is the program that originally calls it.
         """
-        coordinates = []
+        self.coordinates = None
         self.video_source = video_source
         
     def add_coordinate(self, lon, lat):
         """
         We add coordinates based on longitude , latitude
         """
-        pass
 
     def format_coordinate(self, type):
         """
@@ -27,28 +28,50 @@ class Locate():
         """
         pass
 
-    def load_coords(self, file):
+    def load_coords(self):
         """
-        loads_coords from csv
+        loads_coords from csv.
         """
-        pass
+        print("loading file")
+        #if there is no passed variable, open dialog to select
+        file_types = [('Microsoft Excel', '*.csv'), ('All files', '*')]
+        dlg = filedialog.Open(filetypes=file_types)
+        file = dlg.show()
+        print(file)
 
-    def assign_coord(self, id):
+        #if file is selected, read the data
+        if file != '':
+            data = pd.read_csv(file)
+            self.coordinates = data
+            print(data)
+            return data
+
+    def assign_coord(self, event):
         """
         Uses the ID of the coordinates to assign them on the image
-        This function should be called by clicking 
+        This function should be called by clicking.
         """
+        print(str(event.x) +", " + str(event.y))
+        return event.x, event.y
+    
+    def get_coord_id(self):
         pass
-    def remove_assigned_coord(self, id):
+    
+    def set_current_coord(self):
+        pass
+
+    def remove_assigned_coord(self, coord_id):
         """
         removes the location of an assigned coordinate
         """
         pass
 
     def start(self, current_frame, current_frame_number):
+
         scan = self.stitch_and_reference(self.video_source, current_frame, current_frame_number)
         h,w = scan.shape[:2]
 
+        self.load_coords()
         # displayed in a separate, top-level window. Such windows usually have title bars, borders, and other “window decorations”
         locate_window = tkinter.Toplevel()
         locate_window.title("Stitch and Locate")
@@ -74,9 +97,12 @@ class Locate():
         
         #set the image inside of the region
         photo = ImageTk.PhotoImage(image=Image.fromarray(scan))
-        canvas.create_image(0,0,image=photo,anchor="nw")
+        #0,0 is the image location we anchor, anchor is how. If not anchored to nw, it sets the center of the image to top left corner 
+        canvas.create_image(0,0,image=photo, anchor="nw")
         
-        canvas.bind(self.assign_coord)
+        canvas.bind("<Button-1>", self.assign_coord)
+
+        
         locate_window.mainloop()
 
     
@@ -97,5 +123,6 @@ class Locate():
 
         cover_img = cv2.polylines(scan, coordinates, True, (0, 0, 255), 5, cv2.LINE_AA)
         cv2.imwrite("./output/scan.jpg", cover_img)
+        print("Stitching Complete.")
         return scan
 
