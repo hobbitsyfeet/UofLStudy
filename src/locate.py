@@ -5,7 +5,7 @@ passed in with a point, we will extract the GPS coordinate from it.
 """
 from video_process.image import StitchImage
 import tkinter
-from tkinter import filedialog
+from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import cv2
 import pandas as pd
@@ -14,8 +14,15 @@ class Locate():
         """
         The parent window is the program that originally calls it.
         """
-        self.coordinates = None
+        # self.data = data
+        self.coordinates = []
+        self.data = []
         self.video_source = video_source
+        self.vid_length = None
+        self.img_processor = StitchImage()
+
+        self.step = 100
+        self.stitched_frames=10
         
     def add_coordinate(self, lon, lat):
         """
@@ -28,7 +35,7 @@ class Locate():
         """
         pass
 
-    def load_coords(self):
+    def load_coords(self, ):
         """
         loads_coords from csv.
         """
@@ -66,20 +73,49 @@ class Locate():
         """
         pass
 
-    def start(self, current_frame, current_frame_number):
 
-        scan = self.stitch_and_reference(self.video_source, current_frame, current_frame_number)
+    def start(self, finish_frame):
+        stitched_number = 0
+        cap = cv2.VideoCapture(self.video_source)
+        self.vid_length = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        finish_frame = self.vid_length/3
+
+        for num_stitch in range(1, int(finish_frame), int(self.step*self.stitched_frames)):
+            if num_stitch + self.step*self.stitched_frames - finish_frame < 0:
+        #         print()
+
+                scan = self.stitch_and_reference(self.video_source, num_stitch)
+        #         print("Finding reference...")
+        #         for frames in range(num_stitch):
+        #             ret, frame = cap.read()
+        #             # print(frames)
+        #             if ret:
+        #                 points = self.reference(frame, scan)
+        #                 self.coordinates.append(points)
+
+        #         print("Number of coordinates: "+str(len(self.coordinates)))
+        #         # print(num_stitch)
+        #         stitched_number +=1
+        #         cv2.imwrite("./output/stitched/stitched"+ str(stitched_number) +".jpg", scan)
+
+        
         h,w = scan.shape[:2]
 
-        self.load_coords()
+        self.data = self.load_coords()
+
         # displayed in a separate, top-level window. Such windows usually have title bars, borders, and other “window decorations”
         locate_window = tkinter.Toplevel()
         locate_window.title("Stitch and Locate")
 
+        # option_panel=tkinter.Frame(locate_window,width=200, height=200)
+        # option_panel.pack(side=tkinter.LEFT)
+
+        self.setup_dropdown(locate_window, self.data)
         #create a frame inside the window which will contain the canvas
         frame=tkinter.Frame(locate_window,width=w,height=h)
         frame.pack(side=tkinter.LEFT)
 
+        
         #Create a canvas, the area where the image is shown. Scroll region is the size of the image
         canvas=tkinter.Canvas(frame,width=w,height=h, scrollregion=(0,0,w,h),cursor="crosshair")
 
@@ -104,25 +140,59 @@ class Locate():
 
         
         locate_window.mainloop()
+    def setup_dropdown(self, window, data):
+        print("Setting up dropdown")
+        # Create a Tkinter variable
+        self.tkvar = tkinter.StringVar(window)
 
-    
-    def stitch_and_reference(self, video_source, query_frame, start_frame, skip_step=100, total_frames=10 ):
+        # self.choices = []
+        #add data to list
+        # for data_index in range(len(data)):
+            #Add data
+            # values = data.pop()
+            # #if it's the first, append it twice
+            # if data_index == 0:
+            #    self.choices.append(str(data[data_index])) 
+            # self.choices.append(str(data[data_index]))
+        
+
+        #setup the menu
+        popup_menu = ttk.OptionMenu(window, self.tkvar, *self.data)
+        popup_lable = tkinter.Label(window, text="GPS Coordinates")
+
+        popup_lable.pack(side=tkinter.TOP)
+        popup_menu.pack(side=tkinter.TOP)
+        
+        
+
+    def get_data_by_id(self):
+        pass
+
+    def show_reference(self, points, ref_image):
+        for points in range(len(points)):
+            copy = ref_image
+            cover_img = cv2.polylines(copy, points, True, (0, 0, 255),5, cv2.LINE_AA)
+            cv2.imshow("show", cover_img)
+
+    def reference(self, query_frame, stitched_img):
+        coordinates = self.img_processor.find_reference(query_frame, stitched_img)
+        return coordinates
+
+    def stitch_and_reference(self, video_source, start_frame, skip_step=100, total_frames=10):
         """
         stitches the video together
         """
         print("Stitching image")
-        img_process = StitchImage()
 
-        frames = img_process.collect_frames(video_source, start_frame, skip_step, total_frames)
+        frames = self.img_processor.collect_frames(video_source, start_frame, skip_step, total_frames)
 
-        status, scan = img_process.stitch(frames)
-        
-        print("Finding reference")
-
-        coordinates = img_process.find_reference(query_frame, scan)
-
-        cover_img = cv2.polylines(scan, coordinates, True, (0, 0, 255), 5, cv2.LINE_AA)
-        cv2.imwrite("./output/scan.jpg", cover_img)
+        status, scan = self.img_processor.stitch(frames)
         print("Stitching Complete.")
+
         return scan
 
+if __name__ == "__main__":
+        locate_tool = Locate(tkinter.Tk(), "./videos/GH010018.mp4")
+        # cv2.imshow("FRAME", frame)
+        #first is the frame itself the other is the frame number
+        locate_tool.start(locate_tool.vid_length)

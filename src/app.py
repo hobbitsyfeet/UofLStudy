@@ -157,7 +157,7 @@ class App:
         contributing to the manipulation of tracking variables.
         """
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
-                                                min_value=5, max_value=200,
+                                                min_value=-10, max_value=200,
                                                 row=row, column=col
                                                 )
         self.block_size_bar = tracktorOptions.Databar(self.window, self.vid, "Blocksize",
@@ -294,10 +294,10 @@ class App:
     def Stitch_And_Locate(self):
         ret, frame = self.vid.get_frame(-2)
         locate_tool = Locate(self.window, self.video)
-        cv2.imshow("FRAME", frame)
+        # cv2.imshow("FRAME", frame)
         print(str(self.vid.current_frame) + "!!!!")
         #first is the frame itself the other is the frame number
-        locate_tool.start(frame, self.vid.current_frame)
+        locate_tool.start(self.vid.length)
 
     def donothing(self):
         """

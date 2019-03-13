@@ -175,7 +175,7 @@ class StitchImage():
         frames = []
         #set the starting frame
         cap.set(cv2.CAP_PROP_POS_FRAMES, (start_frame - (skip * total_frames/2)))
-        print("starting at" + str(cap.get(cv2.CAP_PROP_POS_FRAMES)))
+        print("Starting at frame: " + str(cap.get(cv2.CAP_PROP_POS_FRAMES)))
         while len(frames) < total_frames:
             #set current frame to the next n-skipped frames
             cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + skip)
@@ -186,7 +186,7 @@ class StitchImage():
             if ret:
                 if cv2.waitKey(30) & 0xFF == ord('q'):
                     break
-                cv2.imshow('frame', frame)
+                # cv2.imshow('frame', frame)
                 #append the frames to be processed
                 frames.append(frame)
         cv2.destroyAllWindows()
