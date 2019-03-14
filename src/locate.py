@@ -16,7 +16,7 @@ class Locate():
         """
         # self.data = data
         self.coordinates = []
-        self.data = []
+        self.data = None
         self.video_source = video_source
         self.vid_length = None
         self.img_processor = StitchImage()
@@ -144,7 +144,11 @@ class Locate():
         print("Setting up dropdown")
         # Create a Tkinter variable
         self.tkvar = tkinter.StringVar(window)
-
+        all_id = self.data.loc[:,'ID'].tolist()
+        
+        #duplicate first index
+        all_id.insert(0, all_id[0])
+        # for self.data
         # self.choices = []
         #add data to list
         # for data_index in range(len(data)):
@@ -154,10 +158,9 @@ class Locate():
             # if data_index == 0:
             #    self.choices.append(str(data[data_index])) 
             # self.choices.append(str(data[data_index]))
-        
-
         #setup the menu
-        popup_menu = ttk.OptionMenu(window, self.tkvar, *self.data)
+        popup_menu = ttk.OptionMenu(window, self.tkvar, *all_id)
+        print(self.get_data_by_id(1))
         popup_lable = tkinter.Label(window, text="GPS Coordinates")
 
         popup_lable.pack(side=tkinter.TOP)
@@ -165,8 +168,15 @@ class Locate():
         
         
 
-    def get_data_by_id(self):
-        pass
+    def get_data_by_id(self, id):
+        #get the row which the id matches
+        id_loc = self.data.loc[self.data['ID'] == id]
+        print(id_loc)
+        #get the coordinates of that
+        x_coord = id_loc.loc[0]['X']
+        y_coord = id_loc.loc[0]['Y']
+        return x_coord, y_coord
+
 
     def show_reference(self, points, ref_image):
         for points in range(len(points)):
