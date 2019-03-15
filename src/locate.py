@@ -94,7 +94,6 @@ class Locate():
                 #                                                         ,'Bottom_Right', 'Bottom_Left'])
                 # reference_data.to_csv("./output/csv/" + "Reference" + ".csv")
 
-        h,w = scan.shape[:2]
         self.process_image = scan
         self.data = self.load_coords()
 
@@ -121,7 +120,7 @@ class Locate():
         # #link the scrollregion to the structural scrollbars
         # self.canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
 
-        self.canvas=tkinter.Canvas(frame,width=w,height=h,cursor="crosshair")
+        self.canvas=tkinter.Canvas(frame,width=self.window_width,height=self.window_height,cursor="crosshair")
 
         self.canvas.pack(side=tkinter.LEFT, expand=True,fill=tkinter.BOTH)
         
