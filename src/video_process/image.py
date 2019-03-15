@@ -174,15 +174,16 @@ class StitchImage():
         cap = cv2.VideoCapture(video_source)
         frames = []
         #set the starting frame
-        cap.set(cv2.CAP_PROP_POS_FRAMES, (start_frame - (skip * total_frames/2)))
+        cap.set(cv2.CAP_PROP_POS_FRAMES, start_frame)
         print("Starting at frame: " + str(cap.get(cv2.CAP_PROP_POS_FRAMES)))
         while len(frames) < total_frames:
-            #set current frame to the next n-skipped frames
-            cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + skip)
-            print(cap.get(cv2.CAP_PROP_POS_FRAMES))
-
             #read the image from that skipped frame
             ret, frame = cap.read()
+
+            cap.set(cv2.CAP_PROP_POS_FRAMES, cap.get(cv2.CAP_PROP_POS_FRAMES) + skip-1)
+            #set current frame to the next n-skipped frames
+            print(cap.get(cv2.CAP_PROP_POS_FRAMES))
+
             if ret:
                 if cv2.waitKey(30) & 0xFF == ord('q'):
                     break
