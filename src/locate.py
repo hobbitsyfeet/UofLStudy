@@ -39,6 +39,7 @@ class Locate():
         self.step = 100
         #stitched frames is the total number of frames per stitched image
         self.stitched_frames=10
+        self.view_frame = 0
 
         #delay is the milisend delay between updating UI
         self.delay = 15
@@ -59,8 +60,8 @@ class Locate():
 
         #iterate in large steps where each step is the range of frames stitched. Eg. stitch(frames[100,200,300]) each iteration is 300
         for num_stitch in range(0, int(finish_frame), int(self.step*self.stitched_frames)):
-            print(int(self.step*self.stitched_frames))
-            print(num_stitch)
+            # print(int(self.step*self.stitched_frames))
+            # print(num_stitch)
             #if limit is not passed
             if num_stitch + self.step*self.stitched_frames - finish_frame < 0:
                 #create a stitched image
@@ -68,7 +69,7 @@ class Locate():
                 #reference each frame in the video that exists in the range stitched Eg. every frame in range 100-300
                 print("Finding reference...")
 
-                for frames in range(int(self.step*self.stitched_frames/10)):
+                for frames in range(int(self.step*self.stitched_frames)):
                     #read each frame and record their referenced locations. These are the corners of the frame
                     ret, frame = cap.read()
                     if ret:
@@ -77,26 +78,29 @@ class Locate():
 
                         try:
                             points = self.reference(frame, scan)
-                            top_left =  points[0][0][0]
-                            top_right = points[0][1][0]
-                            bottom_right = points[0][2][0]
-                            bottom_left = points[0][3][0]
-                            self.referenced.append((frames,top_left, top_right,bottom_right,bottom_left))
+                            self.referenced.append(points)
+                            # top_left =  points[0][0][0]
+                            # top_right = points[0][1][0]
+                            # bottom_right = points[0][2][0]
+                            # bottom_left = points[0][3][0]
+                            # self.referenced.append((frames,top_left, top_right,bottom_right,bottom_left))
                         except:
                             print("Could not reference frame" + str(frames))
 
                 print("Number of coordinates: "+str(len(self.referenced)))
                 stitched_number +=1
                 cv2.imwrite("./output/stitched/stitched"+ str(stitched_number) +".jpg", scan)
-                reference_data = pd.DataFrame(self.referenced, columns=['frame','Top_Left', 'Top_Right'
-                                                                        ,'Bottom_Right', 'Bottom_Left'])
-                reference_data.to_csv("./output/csv/" + "Reference" + ".csv")
+                # reference_data = pd.DataFrame(self.referenced, columns=['frame','Top_Left', 'Top_Right'
+                #                                                         ,'Bottom_Right', 'Bottom_Left'])
+                # reference_data.to_csv("./output/csv/" + "Reference" + ".csv")
 
         h,w = scan.shape[:2]
         self.process_image = scan
         self.data = self.load_coords()
 
         self.setup_dropdown(self.window, self.data)
+        
+        self.setup_frame_bar()
         #create a frame inside the window which will contain the canvas
 
         frame=tkinter.Frame(self.window,width=self.window_width,height=self.window_height)
@@ -138,13 +142,19 @@ class Locate():
         display = self.process_image.copy()
         # gray = cv2.cvtColor(display, cv2.COLOR_BGR2GRAY)
         current_coord = self.get_data_by_id(int(self.tkvar.get()))
+
         for points in range(len(self.assigned)):
             colour = (255,0,0)
             if current_coord == self.assigned[points][1]:
                 colour = (0,255,0)
-
-                
             cv2.circle(display, tuple(self.assigned[points][0]), 10, colour, -1, cv2.LINE_AA)
+        try:
+            cv2.polylines(display,self.referenced[self.view_frame], True, (0, 0, 255),5, cv2.LINE_AA)
+        except:
+            print("no references exist for that frame")
+
+        
+
         resized = cv2.resize(display,(self.window_width, self.window_height),cv2.INTER_CUBIC)
         self.photo = ImageTk.PhotoImage(image=Image.fromarray(resized))
         self.canvas.create_image(0,0,image=self.photo, anchor="nw")
@@ -214,8 +224,14 @@ class Locate():
         for points in range(len(self.assigned)):
             if current_coord == self.assigned[points][1]:
                 self.assigned.pop(points)
+                break
 
-
+    def convert_referenced(self, point):
+        top_left =  point[0][0][0]
+        top_right = point[0][1][0]
+        bottom_right = point[0][2][0]
+        bottom_left = point[0][3][0]
+        return [top_left,top_right,bottom_right,bottom_left]
 
     def setup_dropdown(self, window, data):
         """
@@ -242,6 +258,13 @@ class Locate():
         self.id_coordinates.pack(side=tkinter.TOP)
         remove.pack(side=tkinter.TOP)
         
+    def setup_frame_bar(self):
+        self.frame_bar = ttk.Scale(self.window,from_=0, to=self.vid_length - 1, command=self.set_frame)
+        self.frame_bar.config(length=self.window_width)
+        self.frame_bar.pack(side=tkinter.BOTTOM)
+
+    def set_frame(self, value):
+        self.view_frame = int(float(value))
 
     def get_data_by_id(self, id):
         id_type = self.data.ID.dtype
