@@ -52,10 +52,10 @@ class StitchImage():
             match_img = cv2.drawMatches(query_img, kp1, train_img, kp2, matches, None, flags=2)
         '''
         #find the homography matrix
-        dst = self.find_homography(query_img, train_img, kp1, kp2, matches)
+        dst, M = self.find_homography(query_img, train_img, kp1, kp2, matches)
 
         #return the pixel values of the lines
-        return [np.int32(dst)]
+        return [np.int32(dst)], M
 
 
     def registration(self, images):
@@ -121,7 +121,7 @@ class StitchImage():
         pts = np.array([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ], dtype=np.float32).reshape(-1, 1, 2)
         dst = cv2.perspectiveTransform(pts, M)
         # dst = cv2.getAffineTransform(pts, M)
-        return dst
+        return dst, M
 
 
     def camera_estimation(self):

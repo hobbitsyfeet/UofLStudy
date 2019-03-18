@@ -39,7 +39,7 @@ class VideoCapture:
         self.cap.set(cv2.CAP_PROP_FPS, self.FPS)
 
         #current frame is used to know what frame it is, as well as assigning frames
-        self.current_frame = 0
+        self.current_frame = 10
         self.last_frame = self.current_frame
 
         #playstate is used to play/pause the video
@@ -63,7 +63,7 @@ class VideoCapture:
 
 
         #the path to export the data
-        self.output_path = "../output/"
+        self.output_path = "./output/"
 
         #tracking constants for getting frame types
         self.TRACK_ALL = -1
@@ -192,9 +192,14 @@ class VideoCapture:
         name: string
             compared to the tracktor's id
         """
-        for i in range(len(self.trackers)):
-            if name == self.trackers[i].id:
-                return i
+        if name == "None":
+            return self.NO_TRACKING
+        elif name == "All":
+            return self.TRACK_ALL
+        else:
+            for i in range(len(self.trackers)):
+                if name == self.trackers[i].id:
+                    return i
         return -1
 
     def set_tracker_offset(self, value):
@@ -263,7 +268,6 @@ class VideoCapture:
             (-2: NONE, -1 ALL, 0...n working_number tracking index)
         """
         if self.cap.isOpened():
-
             #initialize ret to false so we enter the while loop
             ret = False
 
@@ -276,14 +280,14 @@ class VideoCapture:
 
             #set the current frame number to the frame we just received
             self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
-            
+
             if tracking == self.NO_TRACKING:
                 return (True, frame)
                 
             elif tracking == self.TRACK_ALL:
                 ret, final = self.show_all(frame)
 
-            elif tracking != self.TRACK_ALL:
+            else:
                 ret, final = self.process(frame, self.trackers[tracking])
                 ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
         if ret:
@@ -388,20 +392,24 @@ class VideoCapture:
 
         """
         #iterate through all
-        final = frame
-        ret = True
-        for i in range(len(self.trackers)):
-            #accumulate tracker's processes onto final frame
-            ret, final = self.process(final, self.trackers[i])
+        try:
+            final = frame
+            ret = True
+            for i in range(len(self.trackers)):
+                #accumulate tracker's processes onto final frame
+                ret, final = self.process(final, self.trackers[i])
 
-            if ret is True and detail is False:
-                cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5,
-                           self.trackers[i].colour, -1, cv2.LINE_AA)
+                if ret is True and detail is False:
+                    cv2.circle(frame, tuple([int(x) for x in self.trackers[i].meas_now[0]]), 5,
+                            self.trackers[i].colour, -1, cv2.LINE_AA)
 
-        if detail is True:
-            return (True, final)
-        else:
-            return (True, frame)
+            if detail is True:
+                return (True, final)
+            else:
+                return (True, frame)
+        except:
+            print("cannot track more than one individual")
+            return frame
 
     def process(self, frame, tracktor):
         """
@@ -425,7 +433,8 @@ class VideoCapture:
         """
         
         try:
-            self.set_tracker_pos(tracktor)
+            if len(self.track_history) > 0:
+                self.set_tracker_pos(tracktor)
             #eliminate small noise
             thresh = tracktor.colour_to_thresh(frame)
             thresh = cv2.erode(thresh, tracktor.kernel, iterations=1)
@@ -445,7 +454,7 @@ class VideoCapture:
             #detect if the tracker is changed
             changed = self.tracker_changed(pos_x, pos_y, contours)
             if changed is True:
-                # self.pause()
+                self.pause()
                 print(tracktor.id + "has changed")
 
             row_ind, col_ind = tracktor.hungarian_algorithm()
@@ -514,6 +523,7 @@ class VideoCapture:
         ret = True
         #we want to process as fast as we can(1000 fps should be good)
         self.cap.set(cv2.CAP_PROP_FPS, 1000)
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         #we want playstate to be true so get_frame will work
         self.play_state = True
 
@@ -521,7 +531,8 @@ class VideoCapture:
         for i in range(len(self.trackers)):
             self.trackers[i].df = []
 
-        while self.current_frame < self.length:
+        # while self.current_frame < self.length:
+        while self.current_frame < 2000:
             # Get a frame from the video source, already processed
             ret, frame = self.get_frame(self.working_number)
             print("loading: " + str(int(self.current_frame)) + " of "+ str(int(self.length)))

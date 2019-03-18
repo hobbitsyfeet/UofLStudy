@@ -31,6 +31,7 @@ class App:
         self.window_height = 720
         self.number_of_trackers = 1
 
+
         self.menu = tkinter.Menu(window)
         window.config(menu=self.menu)
 
@@ -138,7 +139,7 @@ class App:
 
         self.choices = []
         #First value in the list is considered as default
-        self.choices.append("ALL")
+        self.choices.append("NO_ID0")
 
         #List of options of choice begins here
         self.choices.append("All")
@@ -157,7 +158,7 @@ class App:
         contributing to the manipulation of tracking variables.
         """
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
-                                                min_value=-10, max_value=200,
+                                                min_value=5, max_value=200,
                                                 row=row, column=col
                                                 )
         self.block_size_bar = tracktorOptions.Databar(self.window, self.vid, "Blocksize",
@@ -169,7 +170,7 @@ class App:
                                                     row=row+2, column=col
                                                     )
         self.max_area_bar = tracktorOptions.Databar(self.window, self.vid, "MaxArea",
-                                                    min_value=1, max_value=10000,
+                                                    min_value=1, max_value=100000,
                                                     row=row+3, column=col
                                                     )
 
@@ -195,21 +196,23 @@ class App:
 
         #check if we are not the last frame, if we are, stop
         if self.vid.current_frame < self.vid.length:
+            
             #track individual
             ret, frame = self.vid.get_frame(self.vid.working_number)
+
             frame = resize(frame,
                                (int(self.window_width), int(self.window_height)),
                                INTER_CUBIC)
 
             #update framenumber
             self.frame_label.config(text="Frame:" + str(int(self.vid.current_frame)))
-
+            
             #if the return for a frame is true
             if ret:
                 #set the canvas to the frame image
                 self.photo = ImageTk.PhotoImage(image=Image.fromarray(frame))
                 self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
-
+                
         #after a certain time, update to the next frame if play is true
         self.update_frame_bar()
         self.window.after(self.delay, self.update)
@@ -262,7 +265,7 @@ class App:
         self.vid.add_tracker()
         index = len(self.vid.trackers)-1
         #add value to NO_ID
-        self.vid.trackers[index].id += " " + str(index)
+        self.vid.trackers[index].id += str(index)
         self.choices.append(self.vid.trackers[index].id)
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].id) # set the default option
@@ -295,7 +298,6 @@ class App:
         ret, frame = self.vid.get_frame(-2)
         locate_tool = Locate(self.window, self.video)
         # cv2.imshow("FRAME", frame)
-        print(str(self.vid.current_frame) + "!!!!")
         #first is the frame itself the other is the frame number
         locate_tool.start(self.vid.length)
 

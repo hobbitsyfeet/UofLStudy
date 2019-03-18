@@ -218,6 +218,7 @@ class Tracktor():
         self.meas_now = []
         # Clustering contours to separate individuals
         myarray = np.vstack(contours)
+        print(myarray)
         myarray = myarray.reshape(myarray.shape[0], myarray.shape[2])
 
         kmeans = KMeans(n_clusters=1, random_state=0, n_init=50).fit(myarray)
@@ -268,6 +269,10 @@ class Tracktor():
         self.meas_last = list(self.meas_last)
         self.meas_now = list(self.meas_now)
         cost = cdist(self.meas_last, self.meas_now)
+
+        #reduce the length of cost if it gets too long... (takes a long time to process)
+        if len(cost) > 100:
+            cost = cost[:100]
         row_ind, col_ind = linear_sum_assignment(cost)
         return row_ind, col_ind
 

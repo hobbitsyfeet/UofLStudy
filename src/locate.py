@@ -9,6 +9,7 @@ from tkinter import ttk, filedialog
 from PIL import Image, ImageTk
 import cv2
 import pandas as pd
+import numpy as np
 class Locate():
     def __init__(self, parent, video_source):
         """
@@ -23,10 +24,14 @@ class Locate():
         self.assigned = []
         # referenced records where a particular frame find's its place on the working image
         self.referenced = []
+        self.referenced_tracked = []
         # data is the GPS coordinate data
-        self.data = None
+        self.gps_data = None
+        self.tracked_data = None
         # video source is the video which the interface works on
         self.video_source = video_source
+        self.video_width = 1920
+        self.video_height = 1440
         self.vid_length = None
 
         #image_processor is the image processing layer of this interface.
@@ -39,7 +44,7 @@ class Locate():
         self.step = 100
         #stitched frames is the total number of frames per stitched image
         self.stitched_frames=10
-        self.view_frame = 0
+        self.view_frame = 11
 
         #delay is the milisend delay between updating UI
         self.delay = 15
@@ -51,9 +56,13 @@ class Locate():
         #counter for each stitched set
         stitched_number = 1
 
+        self.gps_data = self.load_data("GPS COORDINATES")
+        self.tracked_data = self.load_data("TRACKED PIXELS")
 
         cap = cv2.VideoCapture(self.video_source)
         self.vid_length = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        self.vid_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.vid_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
         
         #stop at the end of the video
         finish_frame = self.vid_length/2
@@ -68,24 +77,24 @@ class Locate():
                 scan = self.stitch_from_video(self.video_source, num_stitch)
                 #reference each frame in the video that exists in the range stitched Eg. every frame in range 100-300
                 print("Finding reference...")
-
-                for frames in range(int(self.step*self.stitched_frames)):
+                ret, frame = cap.read()
+                for frames in range(1 ,int((self.step*self.stitched_frames)/10) ):
                     #read each frame and record their referenced locations. These are the corners of the frame
                     ret, frame = cap.read()
                     if ret:
                         if frames % 10 == 0:
                             print(str(frames) + "/" + str(self.step*self.stitched_frames*stitched_number))
-
+            
                         try:
-                            points = self.reference(frame, scan)
+                            points, matrix = self.reference(frame, scan)
                             self.referenced.append(points)
-                            # top_left =  points[0][0][0]
-                            # top_right = points[0][1][0]
-                            # bottom_right = points[0][2][0]
-                            # bottom_left = points[0][3][0]
-                            # self.referenced.append((frames,top_left, top_right,bottom_right,bottom_left))
+    
                         except:
                             print("Could not reference frame" + str(frames))
+                        try:
+                            self.referenced_tracked.append(self.map_referenced(frames, matrix))
+                        except:
+                            print("Data does not exist for this frame index")
 
                 print("Number of coordinates: "+str(len(self.referenced)))
                 stitched_number +=1
@@ -95,30 +104,16 @@ class Locate():
                 # reference_data.to_csv("./output/csv/" + "Reference" + ".csv")
 
         self.process_image = scan
-        self.data = self.load_coords()
 
-        self.setup_dropdown(self.window, self.data)
+
+
+        self.setup_dropdown(self.window, self.gps_data)
         
         self.setup_frame_bar()
         #create a frame inside the window which will contain the canvas
 
         frame=tkinter.Frame(self.window,width=self.window_width,height=self.window_height)
         frame.pack(side=tkinter.LEFT)
-
-        
-        # #Create a canvas, the area where the image is shown. Scroll region is the size of the image
-        # self.canvas=tkinter.Canvas(frame,width=w,height=h, scrollregion=(0,0,w,h),cursor="crosshair")
-
-        # #create the structual scrollbars
-        # hbar=tkinter.Scrollbar(frame,orient=tkinter.HORIZONTAL)
-        # hbar.pack(side=tkinter.BOTTOM,fill=tkinter.X)
-        # hbar.config(command=self.canvas.xview)
-        # vbar=tkinter.Scrollbar(frame,orient=tkinter.VERTICAL)
-        # vbar.pack(side=tkinter.RIGHT,fill=tkinter.Y)
-        # vbar.config(command=self.canvas.yview)
-
-        # #link the scrollregion to the structural scrollbars
-        # self.canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
 
         self.canvas=tkinter.Canvas(frame,width=self.window_width,height=self.window_height,cursor="crosshair")
 
@@ -151,7 +146,10 @@ class Locate():
             cv2.polylines(display,self.referenced[self.view_frame], True, (0, 0, 255),5, cv2.LINE_AA)
         except:
             print("no references exist for that frame")
-
+        try:
+            cv2.circle(display, tuple(self.referenced_tracked[self.view_frame]), 10, (0,0,0), -1, cv2.LINE_AA)
+        except:
+            print("Cannot place points on frame")
         
 
         resized = cv2.resize(display,(self.window_width, self.window_height),cv2.INTER_CUBIC)
@@ -166,7 +164,7 @@ class Locate():
         """
         pass
 
-    def load_coords(self, ):
+    def load_data(self, title):
         """
         loads_coords from csv.
         """
@@ -180,7 +178,6 @@ class Locate():
         #if file is selected, read the data
         if file != '':
             data = pd.read_csv(file)
-            self.coordinates = data
             print(data)
             return data
 
@@ -226,11 +223,11 @@ class Locate():
                 break
 
     def convert_referenced(self, point):
-        top_left =  point[0][0][0]
+        top_left = point[0][0][0]
         top_right = point[0][1][0]
         bottom_right = point[0][2][0]
         bottom_left = point[0][3][0]
-        return [top_left,top_right,bottom_right,bottom_left]
+        return [top_left, top_right, bottom_right, bottom_left]
 
     def setup_dropdown(self, window, data):
         """
@@ -240,7 +237,7 @@ class Locate():
         print("Setting up dropdown")
         # Create a Tkinter variable
         self.tkvar = tkinter.StringVar(window)
-        all_id = self.data.loc[:,'ID'].tolist()
+        all_id = self.gps_data.loc[:,'ID'].tolist()
         
         #duplicate first index
         all_id.insert(0, all_id[0])
@@ -258,7 +255,7 @@ class Locate():
         remove.pack(side=tkinter.TOP)
         
     def setup_frame_bar(self):
-        self.frame_bar = ttk.Scale(self.window,from_=0, to=self.vid_length - 1, command=self.set_frame)
+        self.frame_bar = ttk.Scale(self.window, from_=0, to=self.vid_length - 1, command=self.set_frame)
         self.frame_bar.config(length=self.window_width)
         self.frame_bar.pack(side=tkinter.BOTTOM)
 
@@ -266,21 +263,36 @@ class Locate():
         self.view_frame = int(float(value))
 
     def get_data_by_id(self, id):
-        id_type = self.data.ID.dtype
+        id_type = self.gps_data.ID.dtype
 
         #get the row which the id matches
-        id_loc = self.data.loc[self.data['ID'] == id]
+        id_loc = self.gps_data.loc[self.gps_data['ID'] == id]
+        # print(id_loc)
         #get the coordinates of that id
         x_coord = id_loc.iloc[0]['X']
         y_coord = id_loc.iloc[0]['Y']
         return x_coord, y_coord
     
-    def map_referenced(self):
+    def map_referenced(self, frame, matrix):
         """
         This function will map the given points through the reference onto
         the stitched frame
         """
-        pass
+        # print(frame)
+        frame = int(frame)
+        #get tracked coordinates for that frame
+        frame_index = self.tracked_data.loc[self.tracked_data['frame'] == frame]
+
+        #with the frame index, we find the coordinates
+        x_coord = frame_index.iloc[0]['pos_x']
+        y_coord = frame_index.iloc[0]['pos_y']
+
+        point = np.array([x_coord, y_coord], dtype=np.float32).reshape(-1, 1, 2)
+        dst = cv2.perspectiveTransform(point, matrix)
+        #convert dst to (x,y) coordinates
+        dst = (dst[0][0][0], dst[0][0][1])
+        print("Mapped from: " + str(x_coord) +","+ str(y_coord) + "->" + str(dst))
+        return dst
 
     def show_reference(self, points, ref_image):
         """
@@ -295,8 +307,8 @@ class Locate():
         """
         This takes a query frame and a larger-stitched frame to find where it exists.
         """
-        coordinates = self.img_processor.find_reference(query_frame, stitched_img)
-        return coordinates
+        coordinates, matrix = self.img_processor.find_reference(query_frame, stitched_img)
+        return coordinates, matrix
 
     def stitch_from_video(self, video_source, start_frame, skip_step=100, total_frames=10):
         """
