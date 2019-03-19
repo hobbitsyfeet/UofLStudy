@@ -91,7 +91,7 @@ class Locate():
                             self.referenced.append(points)
     
                         except:
-                            print("Could not reference frame" + str(frames))
+                            print("Could not reference frame " + str(frames))
                         try:
                             self.referenced_tracked.append(self.map_referenced(frames, matrix))
                         except:
@@ -148,34 +148,35 @@ class Locate():
         except:
             print("no references exist for that frame")
         try:
-            cv2.circle(display, tuple(self.referenced_tracked[self.view_frame]), 10, (0,0,0), -1, cv2.LINE_AA)
+            cv2.circle(display, tuple(self.referenced_tracked[self.view_frame]), 10, (0,255,0), -1, cv2.LINE_AA)
         except:
             print("Cannot place points on frame")
 
         #if we can calculate distance
-        if len(self.assigned > 2):
-            try:
-                for i in len(self.assigned):
-                    pix_coord1 = assigned[i][0]
-                    real_coord1 = assigned[i][1]
-                    for j in len(self.assinged):
-                        #we dont want to measure distance to self
-                        if i != j:
-                            pix_coord2 = assigned[j][0]
-                            real_coord2 = assigned[j][1]
+        if len(self.assigned) > 1:
+            # try:
+            for i in range(len(self.assigned)):
+                pix_coord1 = self.assigned[i][0]
+                real_coord1 = self.assigned[i][1]
+                for j in range(len(self.assigned)):
+                    #we dont want to measure distance to self
+                    if i != j:
+                        pix_coord2 = self.assigned[j][0]
+                        real_coord2 = self.assigned[j][1]
 
-                            pixel_dist = self.calculate_pixel_distance(pix_coord1,pix_coord2)
-                            real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
-                            dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
+                        pixel_dist = self.calculate_pixel_distance(pix_coord1,pix_coord2)
+                        real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
+                        print(real_dist)
+                        dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
 
-                            cv2.line(display, pix_coord1, pix_coord2, (255,10,10), 2)
-                            cv2.text(display, "Distance: " + str(real_dist),
-                                     pix_coord1, 1, (255,255,255)
-                                     )
+                        cv2.line(display, pix_coord1, pix_coord2, (255,215,0), 5)
+                        # cv2.text(display, "Distance: " + str(real_dist),
+                        #             pix_coord1, 1, (255,255,255)
+                        #             )
                                      
 
-            except:
-                print("cannot calculate distance between 2 points")
+            # except:
+            #     print("cannot calculate distance between 2 points")
 
         resized = cv2.resize(display,(self.window_width, self.window_height),cv2.INTER_CUBIC)
         self.photo = ImageTk.PhotoImage(image=Image.fromarray(resized))
@@ -401,12 +402,7 @@ if __name__ == "__main__":
         # displayed in a separate, top-level window. Such windows usually have title bars, borders, and other “window decorations”
         locate_window = tkinter.Toplevel()
         locate_window.title("Stitch and Locate")
-
         locate_tool = Locate(locate_window, "./videos/GH010018_Trim_Trim.mp4")
-        p1 = (365398.3429,5500049.21)
-        p2 = (365394.4838,5500050.257)
-
-        locate_tool.calculate_real_distance(p1,p2)
         # cv2.imshow("FRAME", frame)
         #first is the frame itself the other is the frame number
-        # locate_tool.start(locate_tool.vid_length)
+        locate_tool.start(locate_tool.vid_length)
