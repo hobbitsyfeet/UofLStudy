@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 import cv2
 import pandas as pd
 import numpy as np
+from geopy.distance import distance,geodesic, lonlat
 class Locate():
     def __init__(self, parent, video_source):
         """
@@ -150,7 +151,31 @@ class Locate():
             cv2.circle(display, tuple(self.referenced_tracked[self.view_frame]), 10, (0,0,0), -1, cv2.LINE_AA)
         except:
             print("Cannot place points on frame")
-        
+
+        #if we can calculate distance
+        if len(self.assigned > 2):
+            try:
+                for i in len(self.assigned):
+                    pix_coord1 = assigned[i][0]
+                    real_coord1 = assigned[i][1]
+                    for j in len(self.assinged):
+                        #we dont want to measure distance to self
+                        if i != j:
+                            pix_coord2 = assigned[j][0]
+                            real_coord2 = assigned[j][1]
+
+                            pixel_dist = self.calculate_pixel_distance(pix_coord1,pix_coord2)
+                            real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
+                            dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
+
+                            cv2.line(display, pix_coord1, pix_coord2, (255,10,10), 2)
+                            cv2.text(display, "Distance: " + str(real_dist),
+                                     pix_coord1, 1, (255,255,255)
+                                     )
+                                     
+
+            except:
+                print("cannot calculate distance between 2 points")
 
         resized = cv2.resize(display,(self.window_width, self.window_height),cv2.INTER_CUBIC)
         self.photo = ImageTk.PhotoImage(image=Image.fromarray(resized))
@@ -322,13 +347,66 @@ class Locate():
         print("Stitching Complete.")
         return scan
 
+    def calculate_gps_distance(self, p1, p2):
+        """
+        Calculates distance(m) and bearing between 2 points in UTM
+        """
+        diff_easting = p2[0] - p1[0]
+        diff_northing = p2[1] - p2[1]
+
+        #pythagorean theorum to find distance between 2 points c = sqrt(a^2 + b^2)
+        distance = (diff_easting**2 + diff_northing**2) **(1/2)
+
+        return distance
+        # #calculate slope between the two points(y2-y1)/(x2-x1)
+        # slope = (p2[1]-p1[1])/(p2[0]-p1[0])
+
+        # slope = abs(slope)
+
+        # print("Slope is:" + str(slope))
+        # bearing = np.arctan(slope)
+        
+        # #if slope
+        # if (slope < 0):
+        #     bearing += 180
+        
+               
+    def calculate_pixel_distance(self, p1, p2):
+        """
+        This calculates euclidean distance between 2 pixels
+        """
+        return ((p2[0]-p1[0])**2 + (p2[1] - p1[1])**2) **(1/2)
+
+    def get_distance_ratio(self, pixel_dist, real_dist):
+        """
+        Distance ratio is the ratio of pixels to real distance.
+        Example: If it takes 100 pixels to represent 10 meters, 
+        the ratio is 10:1, 10/1 or 10 pixels for every 1 meter
+        """
+        dist_ratio = pixel_dist/real_dist
+        return dist_ratio
+
+    def get_real_distance(self, p1, p2, ratio):
+        """
+        p1 and p2 are the distances between 2 assigned pixels using a calculated ratio
+        ratio is the ratio of pixels over a real distance
+        If ratio = pixel/real, then real = pixel/ratio.
+        """
+        distance = self.calculate_pixel_distance(p1,p2)
+        real_distance = distance * ratio
+        return real_distance
+
 if __name__ == "__main__":
-    
+        
         # displayed in a separate, top-level window. Such windows usually have title bars, borders, and other “window decorations”
         locate_window = tkinter.Toplevel()
         locate_window.title("Stitch and Locate")
 
         locate_tool = Locate(locate_window, "./videos/GH010018_Trim_Trim.mp4")
+        p1 = (365398.3429,5500049.21)
+        p2 = (365394.4838,5500050.257)
+
+        locate_tool.calculate_real_distance(p1,p2)
         # cv2.imshow("FRAME", frame)
         #first is the frame itself the other is the frame number
-        locate_tool.start(locate_tool.vid_length)
+        # locate_tool.start(locate_tool.vid_length)
