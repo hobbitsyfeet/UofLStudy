@@ -148,7 +148,7 @@ class Locate():
         except:
             print("no references exist for that frame")
         try:
-            cv2.circle(display, tuple(self.referenced_tracked[self.view_frame]), 10, (0,255,0), -1, cv2.LINE_AA)
+            cv2.circle(display, tuple(self.referenced_tracked[self.view_frame]), 10, (0,191,255), -1, cv2.LINE_AA)
         except:
             print("Cannot place points on frame")
 
@@ -165,11 +165,18 @@ class Locate():
                         real_coord2 = self.assigned[j][1]
 
                         pixel_dist = self.calculate_pixel_distance(pix_coord1,pix_coord2)
+                        
                         real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
-                        print(real_dist)
                         dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
-
+                        print("Pixels:" + str(pixel_dist) + ", Real:" + str(real_dist)+ "m, " + str(dist_ratio))
                         cv2.line(display, pix_coord1, pix_coord2, (255,215,0), 5)
+
+                        # for k in range(len(self.referenced_tracked)):
+                            #get the distance from each point (once)?
+                        calculated_dist = self.get_real_distance(self.referenced_tracked[self.view_frame],pix_coord1,dist_ratio)
+                        print(calculated_dist)
+                            #this line, for every point, is from the current frame's tracked coordinate
+                        cv2.line(display, self.referenced_tracked[self.view_frame], pix_coord1, (85,240,30), 5)
                         # cv2.text(display, "Distance: " + str(real_dist),
                         #             pix_coord1, 1, (255,255,255)
                         #             )
@@ -393,8 +400,8 @@ class Locate():
         ratio is the ratio of pixels over a real distance
         If ratio = pixel/real, then real = pixel/ratio.
         """
-        distance = self.calculate_pixel_distance(p1,p2)
-        real_distance = distance * ratio
+        pixel_distance = self.calculate_pixel_distance(p1,p2)
+        real_distance = pixel_distance / ratio
         return real_distance
 
 if __name__ == "__main__":
