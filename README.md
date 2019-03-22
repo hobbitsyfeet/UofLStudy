@@ -1,12 +1,14 @@
 # UofLStudy
 This is the github repository for Justin Petluk's Independent study at University of Lethbridge. (2019)
 
-This will become a tool in which to use Tracktor to export data in a more intuitive way.
+This program will use a modified Tracktor to create a semi-automatic processing tool to track individuals in the video.
+This program extends this tracking and maps the pixel coordinates to GPS locations when used in a remote-sensing manner.
+More details will be released in the future.
 
 # How to install:
 
 
-    Uses python3 (currently developed for python 3.7+ but should work with other versions of python3).
+    Uses python3 (currently developed for python 3.6+ but should work with other versions of python3).
     Tested on
     Python 3.7.2
     Python 3.6.7
