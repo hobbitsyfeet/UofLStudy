@@ -10,7 +10,7 @@ from PIL import Image, ImageTk
 import cv2
 import pandas as pd
 import numpy as np
-from geopy.distance import distance,geodesic, lonlat
+# from geopy.distance import distance,geodesic, lonlat
 class Locate():
     def __init__(self, parent, video_source):
         """
@@ -61,6 +61,7 @@ class Locate():
         self.tracked_data = self.load_data("TRACKED PIXELS")
 
         cap = cv2.VideoCapture(self.video_source)
+        
         self.vid_length = cap.get(cv2.CAP_PROP_FRAME_COUNT)
         self.vid_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.vid_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
@@ -168,14 +169,18 @@ class Locate():
                         
                         real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
                         dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
-                        print("Pixels:" + str(pixel_dist) + ", Real:" + str(real_dist)+ "m, " + str(dist_ratio))
+                        print("Pixels:" + str(pixel_dist) + ", Real:" + str(real_dist)+ "m, ",end="")
+
+                        
                         cv2.line(display, pix_coord1, pix_coord2, (255,215,0), 5)
 
                         # for k in range(len(self.referenced_tracked)):
                             #get the distance from each point (once)?
                         calculated_dist = self.get_real_distance(self.referenced_tracked[self.view_frame],pix_coord1,dist_ratio)
                         print(calculated_dist)
-                            #this line, for every point, is from the current frame's tracked coordinate
+
+                        #this line, for every point, is from the current frame's tracked coordinate
+                        self.calculate_bearing(pix_coord1, self.referenced_tracked[self.view_frame])
                         cv2.line(display, self.referenced_tracked[self.view_frame], pix_coord1, (85,240,30), 5)
                         # cv2.text(display, "Distance: " + str(real_dist),
                         #             pix_coord1, 1, (255,255,255)
@@ -366,18 +371,22 @@ class Locate():
         distance = (diff_easting**2 + diff_northing**2) **(1/2)
 
         return distance
-        # #calculate slope between the two points(y2-y1)/(x2-x1)
-        # slope = (p2[1]-p1[1])/(p2[0]-p1[0])
 
-        # slope = abs(slope)
-
-        # print("Slope is:" + str(slope))
-        # bearing = np.arctan(slope)
+    def calculate_bearing(self, gps_p1, tracked_p2):
+        """
+        Calculates the bearing based on the pixel coordinates.
+        This function calculates this bearing in respect from the gps coordinate to the tracked coordinate.
+        Returns an angle from 0-360 degrees.
+        """
+        bearing = np.rad2deg(np.arctan2(tracked_p2[1] - gps_p1[1], 
+                                        tracked_p2[0] - gps_p1[0])
+                                        )
+        if bearing < 0:
+            bearing += 360
         
-        # #if slope
-        # if (slope < 0):
-        #     bearing += 180
-        
+        print("Bearing:"+str(bearing))
+        return bearing
+    
                
     def calculate_pixel_distance(self, p1, p2):
         """
