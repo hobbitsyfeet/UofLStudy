@@ -277,6 +277,8 @@ class VideoCapture:
                     self.set_frame(self.current_frame - 1)
                 #grab a frame
                 ret, frame = self.cap.read()
+                #use openCL on this data when it can.
+                frame = cv2.UMat(frame)
 
             #set the current frame number to the frame we just received
             self.current_frame = self.cap.get(cv2.CAP_PROP_POS_FRAMES)
@@ -291,9 +293,11 @@ class VideoCapture:
                 ret, final = self.process(frame, self.trackers[tracking])
                 ret, final = self.get_focused_frame(final, self.trackers[tracking], self.zoom)
         if ret:
+            final = final.get()
             #when we retreive a new frame, we can assume we updated values with it
             return (ret, final)
         else:
+            frame = frame.get()
             print("unprocessed")
             return(True, frame)
 
@@ -313,6 +317,7 @@ class VideoCapture:
             the original aspect ratio is adjusted.
         """
         try:
+            frame = frame.get()
             #create point from tracked individual
             pos_x = int(floor(tracktor.meas_now[0][0]))
             pos_y = int(floor(tracktor.meas_now[0][1]))
@@ -328,9 +333,12 @@ class VideoCapture:
             if min_y >= 0 and max_y <= self.height and min_x >= 0 and max_x <= self.width:
                 roi = frame[min_y:max_y,
                             min_x:max_x]
+                
+                roi = cv2.UMat(roi)
                 cv2.imshow("resize", roi)
                 return (True, roi)
             else:
+                frame = cv2.UMat(frame)
                 return (True, frame)
 
             #roi = cv2.resize(roi, (int(self.width), int(self.height)))
@@ -377,6 +385,7 @@ class VideoCapture:
 
         except:
             print("Cannot focus frame")
+            frame = cv2.UMat(frame)
             return (True, frame)
 
     def show_all(self, frame, detail=True):
@@ -449,7 +458,7 @@ class VideoCapture:
                 print("Unable to track " + tracktor.id)
 
             #from our current frame, draw contours and display it on final frame
-            final, contours = tracktor.detect_and_draw_contours(frame, thresh)
+            final, contours = tracktor.detect_and_draw_contours(frame, thresh.get())
 
             #detect if the tracker is changed
             changed = self.tracker_changed(pos_x, pos_y, contours)
@@ -523,7 +532,7 @@ class VideoCapture:
         ret = True
         #we want to process as fast as we can(1000 fps should be good)
         self.cap.set(cv2.CAP_PROP_FPS, 1000)
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
         #we want playstate to be true so get_frame will work
         self.play_state = True
 
@@ -532,7 +541,7 @@ class VideoCapture:
             self.trackers[i].df = []
 
         # while self.current_frame < self.length:
-        while self.current_frame < 2000:
+        while self.current_frame < 1030:
             # Get a frame from the video source, already processed
             ret, frame = self.get_frame(self.working_number)
             print("loading: " + str(int(self.current_frame)) + " of "+ str(int(self.length)))

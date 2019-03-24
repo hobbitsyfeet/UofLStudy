@@ -38,10 +38,11 @@ class StitchImage():
     def find_reference(self, query_img, train_img):
 
         #find the common features between the two images
-        kp1, kp2, des1, des2 = self.find_features(query_img, train_img)
+        kp1, kp2, des1_umat, des2_umat = self.find_features(query_img, train_img)
         
+
         #match the features
-        matches = self.match_features(des1, des2, mode=1)
+        matches = self.match_features(des1_umat, des2_umat, mode=1)
 
         '''
         #draw matches
@@ -78,6 +79,8 @@ class StitchImage():
         This function finds features between 2 images using ORB
         Desribes keypoints using "steer" BRIEF
         """
+        #use GPU
+        img1, img2 = cv2.UMat(img1), cv2.UMat(img2)
         orb = cv2.ORB_create()
         kp1, des1 = orb.detectAndCompute(img1, None)
         kp2, des2 = orb.detectAndCompute(img2, None)
@@ -117,6 +120,7 @@ class StitchImage():
 
         ## find homography matrix and do perspective transform
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC,5.0)
+
         h,w = img1.shape[:2]
         pts = np.array([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ], dtype=np.float32).reshape(-1, 1, 2)
         dst = cv2.perspectiveTransform(pts, M)
@@ -199,9 +203,9 @@ if __name__ == "__main__":
     frames = processor.collect_frames("./videos/GH010018_Trim_Trim.mp4",0, 100, 6)
 
     status, scan = processor.stitch(frames)
-    points = processor.find_reference(frames[4], scan)
+    points, matrix = processor.find_reference(frames[4], scan)
         #draw the red lines
-    print(points)
+    # print(points)
     cover_img = cv2.polylines(scan, points, True, (0, 0, 255),5, cv2.LINE_AA)
 
     cv2.imwrite("./output/cover_img2.jpg", cover_img)

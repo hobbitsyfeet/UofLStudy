@@ -20,6 +20,23 @@ class Tracktor():
                  min_area=100, max_area=5000,
                  scaling=1.0
                  ):
+        
+        try:
+            # Returns True if OpenCL is present
+            ocl = cv2.ocl.haveOpenCL()
+            # Prints whether OpenCL is present
+            print("OpenCL Supported?: ", end='')
+            print(ocl)
+            print()
+            # Enables use of OpenCL by OpenCV if present
+            if ocl == True:
+                print('Now enabling OpenCL support')
+                cv2.ocl.setUseOpenCL(True)
+                print("Has OpenCL been Enabled?: ", end='')
+                print(cv2.ocl.useOpenCL())
+
+        except cv2.error as e:
+            print('Error:')
 
         # colours is a vector of BGR values which are used to identify individuals in the video
         # id is spider id and is also used for individual identification
@@ -142,7 +159,7 @@ class Tracktor():
         contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         # img = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
 
-        final = frame.copy()
+        # final = frame.copy()
 
         i = 0
         self.meas_last = self.meas_now.copy()
@@ -177,7 +194,7 @@ class Tracktor():
                 del contours[i]
 
             else:
-                cv2.drawContours(final, contours, i, (0, 0, 255), 1)
+                cv2.drawContours(frame, contours, i, (0, 0, 255), 1)
                 M = cv2.moments(contours[i])
                 if M['m00'] != 0:
                     contour_x = M['m10']/M['m00']
@@ -189,7 +206,7 @@ class Tracktor():
                 self.meas_now.append([contour_x, contour_y])
                 i += 1
         self.clicked = (-1, -1)
-        return final, contours
+        return frame, contours
 
     def apply_k_means(self, contours):
         """
