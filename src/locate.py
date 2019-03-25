@@ -177,11 +177,13 @@ class Locate():
                         # for k in range(len(self.referenced_tracked)):
                             #get the distance from each point (once)?
                         calculated_dist = self.get_real_distance(self.referenced_tracked[self.view_frame],pix_coord1,dist_ratio)
-                        print(calculated_dist)
 
                         #this line, for every point, is from the current frame's tracked coordinate
-                        self.calculate_bearing(pix_coord1, self.referenced_tracked[self.view_frame])
+                        bearing = self.calculate_bearing(pix_coord1, self.referenced_tracked[self.view_frame])
                         cv2.line(display, self.referenced_tracked[self.view_frame], pix_coord1, (85,240,30), 5)
+                        # print(real_coord1)
+                        new_point = self.get_real_coordinate(real_coord1, calculated_dist, bearing)
+                        print(new_point)
                         # cv2.text(display, "Distance: " + str(real_dist),
                         #             pix_coord1, 1, (255,255,255)
                         #             )
@@ -383,8 +385,7 @@ class Locate():
                                         )
         if bearing < 0:
             bearing += 360
-        
-        print("Bearing:"+str(bearing))
+
         return bearing
     
                
@@ -412,7 +413,15 @@ class Locate():
         pixel_distance = self.calculate_pixel_distance(p1,p2)
         real_distance = pixel_distance / ratio
         return real_distance
-
+    
+    def get_real_coordinate(self, gps_point, distance, bearing):
+        """
+        Given a gps point, the distance and bearing from it, calculate the UTM coordinate.
+        """
+        new_x = gps_point[0]+ distance*np.cos(bearing)
+        new_y = gps_point[1] + distance*np.sin(bearing)
+        print((new_x,new_y))
+        return(new_x, new_y)
 if __name__ == "__main__":
         
         # displayed in a separate, top-level window. Such windows usually have title bars, borders, and other “window decorations”
