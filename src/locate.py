@@ -80,7 +80,7 @@ class Locate():
                 #reference each frame in the video that exists in the range stitched Eg. every frame in range 100-300
                 print("Finding reference...")
                 ret, frame = cap.read()
-                for frames in range(1 ,int((self.step*self.stitched_frames)/10) ):
+                for frames in range(1 ,int((self.step*self.stitched_frames)) ):
                     #read each frame and record their referenced locations. These are the corners of the frame
                     ret, frame = cap.read()
                     if ret:
@@ -162,28 +162,31 @@ class Locate():
                 for j in range(len(self.assigned)):
                     #we dont want to measure distance to self
                     if i != j:
-                        pix_coord2 = self.assigned[j][0]
-                        real_coord2 = self.assigned[j][1]
+                        try:
+                            pix_coord2 = self.assigned[j][0]
+                            real_coord2 = self.assigned[j][1]
 
-                        pixel_dist = self.calculate_pixel_distance(pix_coord1,pix_coord2)
-                        
-                        real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
-                        dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
-                        print("Pixels:" + str(pixel_dist) + ", Real:" + str(real_dist)+ "m, ",end="")
+                            pixel_dist = self.calculate_pixel_distance(pix_coord1,pix_coord2)
+                            
+                            real_dist = self.calculate_gps_distance(real_coord1, real_coord2)
+                            dist_ratio = self.get_distance_ratio(pixel_dist, real_dist)
+                            print("Pixels:" + str(pixel_dist) + ", Real:" + str(real_dist)+ "m, ",end="")
 
-                        
-                        cv2.line(display, pix_coord1, pix_coord2, (255,215,0), 5)
+                            
+                            cv2.line(display, pix_coord1, pix_coord2, (255,215,0), 5)
 
-                        # for k in range(len(self.referenced_tracked)):
-                            #get the distance from each point (once)?
-                        calculated_dist = self.get_real_distance(self.referenced_tracked[self.view_frame],pix_coord1,dist_ratio)
+                            # for k in range(len(self.referenced_tracked)):
+                                #get the distance from each point (once)?
+                            calculated_dist = self.get_real_distance(self.referenced_tracked[self.view_frame],pix_coord1,dist_ratio)
 
-                        #this line, for every point, is from the current frame's tracked coordinate
-                        bearing = self.calculate_bearing(pix_coord1, self.referenced_tracked[self.view_frame])
-                        cv2.line(display, self.referenced_tracked[self.view_frame], pix_coord1, (85,240,30), 5)
-                        # print(real_coord1)
-                        new_point = self.get_real_coordinate(real_coord1, calculated_dist, bearing)
-                        print(new_point)
+                            #this line, for every point, is from the current frame's tracked coordinate
+                            bearing = self.calculate_bearing(pix_coord1, self.referenced_tracked[self.view_frame])
+                            cv2.line(display, self.referenced_tracked[self.view_frame], pix_coord1, (85,240,30), 5)
+                            # print(real_coord1)
+                            new_point = self.get_real_coordinate(real_coord1, calculated_dist, bearing)
+                            print(new_point)
+                        except:
+                            print("")
                         # cv2.text(display, "Distance: " + str(real_dist),
                         #             pix_coord1, 1, (255,255,255)
                         #             )
@@ -318,21 +321,25 @@ class Locate():
         This function will map the given points through the reference onto
         the stitched frame
         """
-        # print(frame)
-        frame = int(frame)
-        #get tracked coordinates for that frame
-        frame_index = self.tracked_data.loc[self.tracked_data['frame'] == frame]
+        try:
+            # print(frame)
+            frame = int(frame)
+            #get tracked coordinates for that frame
+            frame_index = self.tracked_data.loc[self.tracked_data['frame'] == frame]
 
-        #with the frame index, we find the coordinates
-        x_coord = frame_index.iloc[0]['pos_x']
-        y_coord = frame_index.iloc[0]['pos_y']
+            #with the frame index, we find the coordinates
+            x_coord = frame_index.iloc[0]['pos_x']
+            y_coord = frame_index.iloc[0]['pos_y']
 
-        point = np.array([x_coord, y_coord], dtype=np.float32).reshape(-1, 1, 2)
-        dst = cv2.perspectiveTransform(point, matrix)
-        #convert dst to (x,y) coordinates
-        dst = (dst[0][0][0], dst[0][0][1])
-        print("Mapped from: " + str(x_coord) +","+ str(y_coord) + "->" + str(dst))
-        return dst
+            point = np.array([x_coord, y_coord], dtype=np.float32).reshape(-1, 1, 2)
+            dst = cv2.perspectiveTransform(point, matrix)
+            #convert dst to (x,y) coordinates
+            dst = (dst[0][0][0], dst[0][0][1])
+            print("Mapped from: " + str(x_coord) +","+ str(y_coord) + "->" + str(dst))
+            return dst
+        except:
+            print("Nothing Mapped")
+            return (-1,-1)
 
     def show_reference(self, points, ref_image):
         """
@@ -349,6 +356,14 @@ class Locate():
         """
         coordinates, matrix = self.img_processor.find_reference(query_frame, stitched_img)
         return coordinates, matrix
+    
+    def tracked_data_exists(self, frame):
+        exists = False
+        try:
+            frame_index = self.tracked_data.loc[self.tracked_data['frame'] == frame]
+            return True
+        except:
+            return False
 
     def stitch_from_video(self, video_source, start_frame, skip_step=100, total_frames=10):
         """
