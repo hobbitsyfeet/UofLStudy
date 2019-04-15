@@ -446,24 +446,26 @@ class VideoCapture:
                 self.set_tracker_pos(tracktor)
             #eliminate small noise
             thresh = tracktor.colour_to_thresh(frame)
+            # cv2.imshow("thresh", thresh)
             thresh = cv2.erode(thresh, tracktor.kernel, iterations=1)
+            # cv2.imshow("dialate", thresh)
             thresh = cv2.dilate(thresh, tracktor.kernel, iterations=1)
-
+            # cv2.imshow("erode", thresh)
             #x, y coordinates of previous tracktor if meas_now is not empty
             if tracktor.meas_now:
                 pos_x = tracktor.meas_now[0][0]
                 pos_y = tracktor.meas_now[0][1]
             else:
-                self.pause()
+                # self.pause()
                 print("Unable to track " + tracktor.id)
 
             #from our current frame, draw contours and display it on final frame
             final, contours = tracktor.detect_and_draw_contours(frame, thresh.get())
-
+            # cv2.imshow("detect_and_draw", final)
             #detect if the tracker is changed
             changed = self.tracker_changed(pos_x, pos_y, contours)
             if changed is True:
-                self.pause()
+                # self.pause()
                 print(tracktor.id + "has changed")
 
             row_ind, col_ind = tracktor.hungarian_algorithm()

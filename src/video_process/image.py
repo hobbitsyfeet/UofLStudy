@@ -3,7 +3,7 @@ from __future__ import print_function
 import cv2 as cv2
 import numpy as np
 import sys
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 # from random import randrange
 
 class StitchImage():
@@ -109,12 +109,16 @@ class StitchImage():
             matches = sorted(matches, key=lambda x:x.distance)
             
             matches = matches[:20]
-
+            
         return matches
 
     def find_homography(self, img1, img2, kp1, kp2, matches):
         ## extract the matched keypoints
         # 
+        # feature_match = cv2.drawMatches(img1,kp1,img2,kp2,matches,None)
+
+        # plt.imshow(feature_match, 'gray'),plt.show()
+
         src_pts  = np.array([kp1[m.queryIdx].pt for m in matches], dtype=np.float32).reshape(-1, 1, 2)
         dst_pts  = np.array([kp2[m.trainIdx].pt for m in matches], dtype=np.float32).reshape(-1, 1, 2)
 
@@ -124,6 +128,7 @@ class StitchImage():
         h,w = img1.shape[:2]
         pts = np.array([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ], dtype=np.float32).reshape(-1, 1, 2)
         dst = cv2.perspectiveTransform(pts, M)
+
         # dst = cv2.getAffineTransform(pts, M)
         return dst, M
 

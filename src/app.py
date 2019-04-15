@@ -158,11 +158,11 @@ class App:
         contributing to the manipulation of tracking variables.
         """
         self.offset_bar = tracktorOptions.Databar(self.window, self.vid, "Offset",
-                                                min_value=5, max_value=200,
+                                                min_value=-100, max_value=1000,
                                                 row=row, column=col
                                                 )
         self.block_size_bar = tracktorOptions.Databar(self.window, self.vid, "Blocksize",
-                                                    min_value=1, max_value=200,
+                                                    min_value=1, max_value=5000,
                                                     row=row+1, column=col
                                                     )
         self.min_area_bar = tracktorOptions.Databar(self.window, self.vid, "MinArea",
@@ -270,7 +270,7 @@ class App:
         #set the initial value
         self.tkvar.set(self.vid.trackers[0].id) # set the default option
         self.popup_menu = ttk.OptionMenu(self.window, self.tkvar, *self.choices)
-        # self.popup_menu.grid(row=1, column=0)
+        self.popup_menu.grid(row=1, column=6, sticky="N")
 
     def save_profile(self):
         """

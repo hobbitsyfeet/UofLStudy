@@ -442,7 +442,7 @@ if __name__ == "__main__":
         # displayed in a separate, top-level window. Such windows usually have title bars, borders, and other “window decorations”
         locate_window = tkinter.Toplevel()
         locate_window.title("Stitch and Locate")
-        locate_tool = Locate(locate_window, "./videos/GH010018_Trim_Trim.mp4")
+        locate_tool = Locate(locate_window, "./videos/Complex_Trim.mp4")
         # cv2.imshow("FRAME", frame)
         #first is the frame itself the other is the frame number
         locate_tool.start(locate_tool.vid_length)
