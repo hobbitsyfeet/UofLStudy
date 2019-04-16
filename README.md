@@ -23,6 +23,7 @@ Install requirments, this can be done by using pip3:
 
 
 ![Screenshot]( https://github.com/hobbitsyfeet/UofLStudy/blob/master/docs/tracktor.PNG)
+![Screenshot](https://github.com/hobbitsyfeet/UofLStudy/blob/master/docs/Processing/Selected_Contours.PNG)
 ![Screenshot](https://github.com/hobbitsyfeet/UofLStudy/blob/master/docs/Processing/Find_GPS2.PNG)
 _________________________________________________
 Tracktor's information
