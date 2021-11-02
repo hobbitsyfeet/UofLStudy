@@ -3,9 +3,106 @@ import cv2
 import gopro_calib as calib
 from copy import deepcopy
 
+
+# import matplotlib.pyplot as plt
+# from mpl_toolkits.mplot3d import Axes3D
+# from matplotlib import cm
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import cm
+
+# https://stackoverflow.com/questions/12299870/computing-x-y-coordinate-3d-from-image-point
+def plot_points(event,x,y,flags,params):
+    global mouseX,mouseY
+    # print(params)
+    mapped_points = params
+    p_list = []
+    x_list = []
+    y_list = []
+    z_list = []
+    if event == cv2.EVENT_LBUTTONDBLCLK:
+        if (x,y) in mapped_points.keys():
+            p_list = mapped_points[(x,y)]
+            
+            
+            for p in p_list:
+                print(p)
+                x_list.append(p[0])
+                y_list.append(p[2])
+                z_list.append(p[1])
+
+
+
+            fig = plt.figure(figsize=(4,4))
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(xs = x_list, ys = y_list, zs = z_list)
+
+            ax.set_title("3D Point position in room")
+
+            ax.set_xlabel("X (Width")
+            ax.set_ylabel("Y (Height)")
+            ax.set_zlabel("Z (Depth")
+
+            plt.show()
+
+
+def map_2d_to_3d( rvec, tvec, camera_matrix, distortion_coefficients, room_dimensions = (1000,1000,1000),):
+    '''
+    Maps the entire image to depth points with defined room
+    '''
+    print("Mapping points...")
+    # Room dimensions is 1m (width) x 1m (height) x 1m(depth)
+    w = room_dimensions[0]
+    h = room_dimensions[1]
+    d = room_dimensions[2]
+
+    # axis = np.float32([
+    #     [0,0,0], # center
+    #     [0,3000,0],
+    #     [3000,3000,0],
+    #     [3000,0,0],
+    #                 [0,0,3000],[0,3000,3000],[3000,3000,3000],[3000,0,3000] ])
+    img = cv2.imread(img_path)
+    mapped = {}
+    for i in range(0,w,25):
+        print(i)
+        for j in range(0,1000,25):
+            for k in range(0,d,25):
+                
+                point = np.float32([[i, k, j]])
+                
+                mapped_point, jac = cv2.projectPoints(point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+                mapped_point = (int(mapped_point[0][0][0]),int(mapped_point[0][0][1]))
+
+                # cv2.putText(img,str(mapped_point),mapped_point,fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2, color=(255,0,0))
+                
+                cv2.imshow('img', img) 
+                cv2.waitKey(1) 
+                
+                # print(mapped_point)
+                if mapped_point not in mapped.keys():
+                    # cv2.circle(img,mapped_point,1,color=(255,0,255))
+                    mapped[mapped_point] = list()
+                    mapped[mapped_point].append((i,k,j))
+                else:
+                    cv2.circle(img,mapped_point,2,color=(0,0,0), thickness=-1)
+                    mapped[mapped_point].append((i,k,j))
+                    
+                
+    print("Finished mapping points")
+    return mapped
+
+def get_3d_point(pixel, camera_matrix, rotation_matrix, tvec, height=1500):
+    uv_point = np.array([pixel[0], pixel[1], 1])
+    left_side = np.linalg.inv(rotation_matrix * np.identity(3) ) * np.linalg.inv(camera_matrix * np.identity(3) ) * uv_point
+
+    # print("Lside:", left_side)
+    right_side = np.linalg.inv(rotation_matrix * np.identity(3)) * tvec
+    # print("Rside:", right_side)
+
+    s = height + right_side[2][2]/left_side[2][2]
+
+    return np.linalg.inv(rotation_matrix* np.identity(3)) * (s*np.linalg.inv(camera_matrix* np.identity(3)) * uv_point - tvec)
 
 def display_3D_Plot(points, shown):
     fig = plt.figure()
@@ -105,12 +202,12 @@ def draw(img, corners, imgpts):
     corner4 = tuple(imgpts[2].ravel())
     
     cv2.putText(img,"x",corner2,fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2, color=(255,0,0))
-    cv2.putText(img,"y",corner3,fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2, color=(0,255,0))
-    cv2.putText(img,"z",corner4,fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2, color=(0,0,255))
+    cv2.putText(img,"y",corner4,fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2, color=(0,255,0))
+    cv2.putText(img,"z",corner3,fontFace=cv2.FONT_HERSHEY_PLAIN,fontScale=2, color=(0,0,255))
 
     img = cv2.arrowedLine(img, corner, corner2, (255,0,0), 2)
-    img = cv2.arrowedLine(img, corner, corner3, (0,255,0), 2)
-    img = cv2.arrowedLine(img, corner, corner4, (0,0,255), 2)
+    img = cv2.arrowedLine(img, corner, corner4, (0,255,0), 2)
+    img = cv2.arrowedLine(img, corner, corner3, (0,0,255), 2)
 
     return img
 
@@ -237,9 +334,9 @@ def get_room_points(width,length,height=0):
 
 if __name__ == "__main__":
     # img_path = "C:/Users/legom/Pictures/idea.jpeg"
-    img_path = "C:/Users/legom/Pictures/checker.png"
+    # img_path = "C:/Users/legom/Pictures/checker.png"
     # img_path = "C:/Users/legom/Pictures/Cat_ear.PNG"
-    # img_path = "C:/Users/legom/Pictures/testing.jpg"
+    img_path = "C:/Users/legom/Pictures/testing.jpg"
     img = cv2.imread(img_path)
     # gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 
@@ -278,11 +375,12 @@ if __name__ == "__main__":
     image = img
 
     # distCoeffs = np.identity(4)
-    axis = np.float32([[3,0,0], [0,3,0], [0,0,-3]]).reshape(-1,3)
+    axis = np.float32([[3000,0,0], [0,3000,0], [0,0,1700]]).reshape(-1,3)
+    # axis = np.float32([[3000,0,0], [0,3000,0], [0,0,3000]])
     
     print("AXIS", axis)
 
-    objectPoints = get_room_points(3,3)
+    objectPoints = get_room_points(3000,3000)
     mtx = np.array(
         [
             [465.53318908,0,259.21780444],
@@ -292,97 +390,83 @@ if __name__ == "__main__":
     )
     # dist = np.array([[ 0.1465351,-0.03129233,-0.00449818,-0.01571948,-0.10592451]])
     dist = np.zeros((5,1))
-    # mtx = np.identity(3)
-    # dist = np.zeros
-    # objp = np.zeros((3*4,3), np.float32)
-    # objp[:,:2] = np.mgrid[0:3,0:4].T.reshape(-1,2)
-    # print("OBJECT POINTS", objectPoints)
-    # print(objectPoints.shape)
-    # print()
 
     retval, rvecs, tvecs = cv2.solvePnP(objectPoints, corner_np.astype(np.float64), calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
-    print()
-    Lcam = calib.GOPRO_HERO3_BLACK_NARROW_MTX.dot(np.hstack((cv2.Rodrigues(rvecs)[0],tvecs)))
-
-    rotation_mat = cv2.Rodrigues(rvecs)
-
-    print("Rotation Vector", rvecs)
-    print("Rotation Matrix", rotation_mat)
-    # invert_rvecs = np.zeros((3,3))
-    print(type(rvecs))
-    print(rvecs.shape)
-    
-    invert_rvecs = np.transpose(rvecs)
-    print(invert_rvecs.shape)
-
-    # invert_rvecs = cv2.invert(rvecs, invert_rvecs)
-    # invert_tvecs = np.invert(tvecs)
-    
-    # retval, rvecs, tvecs = cv2.solveP3P(objectPoints, corner_np.astype(np.float64), calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
-
     print("RVEC",rvecs,"\nTVEC",tvecs)
-    # print("IRVEC",invert_rvecs,"\nITVEC",invert_tvecs)
-    invert_rvecs = np.array([[0],[0],[0]])
-    invert_tvecs = np.array([[0],[0],[0]])
 
+    # rotation_mat = cv2.Rodrigues(rvecs)
 
-    # cv2.invert(rvecs,invert_rvecs)
     # project 3D points to image plane
     imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
 
     box_pts = np.float32([[0,0,0], [0,3,0], [3,3,0], [3,0,0],
-                    [0,0,3],[0,3,3],[3,3,3],[3,0,3] ])
-    projected_box, jac = cv2.projectPoints(box_pts, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
-    # print("Jacobian", jac)
-    # print("PROJECTED_BOX",projected_box)
+                    [0,0,3],[0,3,3],[3,3,3],[3,0,3]])
 
-    # inverse_box, jac = cv2.projectPoints(box_pts, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
-    # print("INVERSE_PROJECTED_BOX", )
-    
-    # image = draw_normals(img, corner_np, imgpts)
+    projected_box, jac = cv2.projectPoints(box_pts, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
     image = draw(img,corner_np, imgpts)
-    # image = draw_box(image,corner_np,projected_box)
-    print(corner_np[:1])
+    image = draw_box(image,corner_np,projected_box)
     cv2.imshow('img', image) 
     cv2.waitKey(0) 
 
     height = 0
     width = 0
-    depth = 3
+    depth = 0
     init = deepcopy(image)
 
-    print(tvecs, rvecs)
+    # print(tvecs, rvecs)
+    # rotation_matrx = cv2.Rodrigues(rvecs)
 
-    # invert_translate = cv2.invert(tvecs)
-    
-    # invert_rotate = cv2.invert(rvecs)
+    mapped = map_2d_to_3d(rvecs,tvecs,calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist, room_dimensions=(3000,3000,1000))
+    cv2.setMouseCallback('img', plot_points, param=mapped)
+    # plot_points(params=mapped)
 
-
-    print(mtx)
-    # print(cv2.invert(calib.GOPRO_HERO3_BLACK_NARROW_MTX))
-    # inv_mtx = cv2.invert(calib.GOPRO_HERO3_BLACK_NARROW_MTX)[1]
-    # print(inv_mtx.shape)
-    # print(inv_mtx)
+    Lcam = calib.GOPRO_HERO3_BLACK_NARROW_MTX.dot(np.hstack((cv2.Rodrigues(rvecs)[0],tvecs)))
+    # print(Lcam)
     shown = False
+    img = cv2.imread(img_path)
     while True:
         key = cv2.waitKey(50) 
         if key == ord('w'):
-            height += 0.1
+            height += 10
         elif key == ord('s'):
-            height -= 0.1
+            height -= 10
         elif key == ord('a'):
-            width -= 0.1
+            width -= 10
         elif key == ord('d'):
-
-            width += 0.1
-        img = cv2.imread(img_path)
-
-        axis = np.float32([[0,0,0], [0,3,0], [3,3,0], [3,0,0],
-                    [0,0,3],[0,3,3],[3,3,3],[3,0,3] ])
-
-        imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+            width += 10
+        elif key == ord('x'):
+            depth += 10
+        elif key == ord('z'):
+            depth -= 10
         
 
+        axis = np.float32([[0,0,0], [0,3000,0], [3000,3000,0], [3000,0,0],
+                    [0,0,3000],[0,3000,3000],[3000,3000,3000],[3000,0,3000] ])
+
+        imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+        init = deepcopy(image)
+
+        # mapped = get_3d_point((500,500), calib.GOPRO_HERO3_BLACK_NARROW_MTX, rvecs, tvecs)
+        floater_point = np.float32([[width, depth, height]])
+        floater, jac = cv2.projectPoints(floater_point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+        # print("MAPPED", mapped, "\n| floater", floater, "\nFP: ", floater_point)
+        # print(width, height, depth)
+        # mapped = map_2d_to_3d(rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist, room_dimensions=(4000,1000,3000))
+        # print(width, height)
+        # print(mapped)
+        # Lcam=mtx.dot(np.hstack((cv2.Rodrigues(rvecs[0])[0],tvecs[0])))
+
+
+        # cv::Mat uvPoint = (cv::Mat_<double>(3,1) << 363, 222, 1); // u = 363, v = 222, got this point using mouse callback
+
+        # cv::Mat leftSideMat  = rotationMatrix.inv() * cameraMatrix.inv() * uvPoint;
+        # cv::Mat rightSideMat = rotationMatrix.inv() * tvec;
+
+        # double s = (285 + rightSideMat.at<double>(2,0))/leftSideMat.at<double>(2,0)); 
+        # //285 represents the height Zconst
+
+        # std::cout << "P = " << rotationMatrix.inv() * (s * cameraMatrix.inv() * uvPoint - tvec) << std::endl;
+        # print(imgpts)
         # image = draw_box(img, corner_np, imgpts)
 
         # inv_mtx = np.invert(mtx)
@@ -390,54 +474,93 @@ if __name__ == "__main__":
         
         # print(mtx.inv())
 
-        point = np.float32([
-            [width,0,height],
-            [width,3,height]
-            ])
-        point_px = (width,height,0)
-        print(point_px)
+        # point = np.float32([
+        #     [width,0,height],
+        #     [width,3000,height]
+        #     ])
+        # point_px = (width,height,0)
+        # # print(point_px)
 
+        # uv_point = np.float32([width, height, 1]) #Z is constant
+        # print()
 
+        # left_side_matrix = np.dot(
+        #                         np.dot(np.linalg.inv(rotation_matrx[0]), np.linalg.inv(calib.GOPRO_HERO3_BLACK_NARROW_MTX)),
+        #                         uv_point)
+        
+        # right_side_matrix = np.dot(np.linalg.inv(rotation_matrx[0]), tvecs)
+        # print("RightSideMatrix", right_side_matrix)
 
+        # s_matrix = 1750 + right_side_matrix[2]/ left_side_matrix[2]
+        # # s_matrix = 
+        # print("S", s_matrix)
 
-        # point_px = (width,height,3)
+        # print("Point = ", np.dot(np.linalg.inv(rotation_matrx[0]), (np.dot(np.dot(s_matrix, calib.GOPRO_HERO3_BLACK_NARROW_MTX), (uv_point-tvecs) ))))
+
+        # front_point_px = (width,height,3)
+        # back_point_px = (width,height,3)
         # hom_pt = point_px
         # print("HOM_PT",hom_pt)
         # np.float32([[width,0,height],[width,3,height]])
         # print()
         # print(hom_pt[1][1])
 
-        # hom_pt = np.float32([[hom_pt[0],hom_pt[1],0],[hom_pt[0],hom_pt[1],3]])
+        # hom_pt = np.float32([[front_point_px[0],front_point_px[1],0],[front_point_px[0],front_point_px[1],3]])
+        # hom_pt = np.float32([[front_point_px[0],front_point_px[1],0],[front_point_px[0],front_point_px[1],3]])
         # # point = np.float32([[hom_pt[0],hom_pt[1],0],[hom_pt[0],hom_pt[1],0]])
         # # print(hom_pt)
-        # point = np.float32([[hom_pt[0][0],hom_pt[1][1],3]])
+        
+        back_point = np.float32([[width,height,0]])
         # # print(point)
         # # point = ()
         # # print(width, height)
+        # px=100
+        # py=100
+        # Z=0
+        # X=np.linalg.inv(np.hstack((Lcam[:,0:2],np.array([[-1*px],[-1*py],[-1]])))).dot((-Z*Lcam[:,2]-Lcam[:,3]))
+        # print(X)
         X = np.linalg.inv(np.hstack((Lcam[:,0:2],np.array([[-1*width],[-1*height],[-1]])))).dot((-depth*Lcam[:,2]-Lcam[:,3]))
-        print(X)
+        # print("LOCATION", X)
 
 
         # front_face_pts, jac = cv2.projectPoints(point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
-        front_and_back, jac = cv2.projectPoints(point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
-        print(front_and_back)
+        front_point = np.float32([[width,0,height]])
+        front, jac = cv2.projectPoints(front_point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+
+        back_point = np.float32([[width,3000,height]])
+        back, jac = cv2.projectPoints(back_point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+
+        floater_point = np.float32([[width, depth, height]])
+        floater, jac = cv2.projectPoints(floater_point, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
+        # print(front_and_back)
         # imgpts, jac = cv2.projectPoints(X, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
         # imgpts, jac = cv2.projectPoints(axis, rvecs, tvecs, calib.GOPRO_HERO3_BLACK_NARROW_MTX, dist)
         # print(imgpts)
         # point
         # print(imgpts)
         # display_3D_Plot(X, shown)
-        
+        # print()
         # show once then update
         if not shown:
             shown = True
         # print("FRONT/BACK",front_and_back)
-        front_point = (front_and_back[0][0][0],front_and_back[0][0][1])
-        print(front_and_back[0])
-        back_point = (front_and_back[1][0][0],front_and_back[1][0][1])
+        front_point = (front[0][0][0],front[0][0][1])
+        back_point = (back[0][0][0],back[0][0][1])
+        floater_point = (floater[0][0][0],floater[0][0][1])
+        # print(front_point)
+        # print(front_and_back[1][0][1])
+        
 
-        cv2.circle(image,front_point,5,color=(255,255,255))
-        image = draw_point(image, front_point, back_point )
-        cv2.imshow('img', image) 
+        # cv2.circle(img,front_point,5,color=(255,255,255))
+        # cv2.circle(img,back_point,10,color=(0,255,255))
+        
+        # cv2.circle(img, (100,100),5,color=(255,255,255))
+        img = draw_point(init, front_point, back_point)
+        # cv2.circle(img,floater_point,4,color=(0,0,255), thickness=4)
+
+        test = (X)
+        # cv2.putText()
+        # cv2.imshow('img', img) 
+        cv2.waitKey(0) 
 
 
